@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="content container-fluid">
+        <div class="page-header">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h3 class="page-title">{{ title }}</h3>
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'customers:customer_list' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item active">{{ title }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <!-- Left Column -->
+                        <div class="col-md-6">
+                            <h5>Basic Information</h5>
+                            <hr>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.customer_type.id_for_label }}" class="form-label">Customer Type *</label>
+                                {{ form.customer_type }}
+                                {% if form.customer_type.errors %}
+                                    <div class="text-danger small">{{ form.customer_type.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.first_name.id_for_label }}" class="form-label">First Name *</label>
+                                {{ form.first_name }}
+                                {% if form.first_name.errors %}
+                                    <div class="text-danger small">{{ form.first_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.last_name.id_for_label }}" class="form-label">Last Name</label>
+                                {{ form.last_name }}
+                                {% if form.last_name.errors %}
+                                    <div class="text-danger small">{{ form.last_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.email.id_for_label }}" class="form-label">Email *</label>
+                                {{ form.email }}
+                                {% if form.email.errors %}
+                                    <div class="text-danger small">{{ form.email.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.phone.id_for_label }}" class="form-label">Phone *</label>
+                                {{ form.phone }}
+                                {% if form.phone.errors %}
+                                    <div class="text-danger small">{{ form.phone.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.company_name.id_for_label }}" class="form-label">Company Name</label>
+                                {{ form.company_name }}
+                                {% if form.company_name.errors %}
+                                    <div class="text-danger small">{{ form.company_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.credit_limit.id_for_label }}" class="form-label">Credit Limit</label>
+                                {{ form.credit_limit }}
+                                {% if form.credit_limit.errors %}
+                                    <div class="text-danger small">{{ form.credit_limit.errors }}</div>
+                                {% endif %}
+                                <small class="text-muted">Default: 0.00</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Right Column -->
+                        <div class="col-md-6">
+                            <h5>Address Information</h5>
+                            <hr>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.address.id_for_label }}" class="form-label">Address *</label>
+                                {{ form.address }}
+                                {% if form.address.errors %}
+                                    <div class="text-danger small">{{ form.address.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.city.id_for_label }}" class="form-label">City *</label>
+                                {{ form.city }}
+                                {% if form.city.errors %}
+                                    <div class="text-danger small">{{ form.city.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.state.id_for_label }}" class="form-label">State</label>
+                                {{ form.state }}
+                                {% if form.state.errors %}
+                                    <div class="text-danger small">{{ form.state.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.pincode.id_for_label }}" class="form-label">Pincode *</label>
+                                {{ form.pincode }}
+                                {% if form.pincode.errors %}
+                                    <div class="text-danger small">{{ form.pincode.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.country.id_for_label }}" class="form-label">Country *</label>
+                                {{ form.country }}
+                                {% if form.country.errors %}
+                                    <div class="text-danger small">{{ form.country.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.tags.id_for_label }}" class="form-label">Tags</label>
+                                {{ form.tags }}
+                                {% if form.tags.errors %}
+                                    <div class="text-danger small">{{ form.tags.errors }}</div>
+                                {% endif %}
+                                <small class="text-muted">Comma-separated (e.g., Premium, VIP, Regular)</small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.status.id_for_label }}" class="form-label">Status</label>
+                                {{ form.status }}
+                                {% if form.status.errors %}
+                                    <div class="text-danger small">{{ form.status.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.comments.id_for_label }}" class="form-label">Comments</label>
+                                {{ form.comments }}
+                                {% if form.comments.errors %}
+                                    <div class="text-danger small">{{ form.comments.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">Save Customer</button>
+                            <a href="{% url 'customers:customer_list' %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

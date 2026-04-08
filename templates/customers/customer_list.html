@@ -1,0 +1,770 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Contacts - Customer Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    .table-avatar .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        overflow: hidden;
+        margin-right: 10px;
+    }
+    
+    .table-avatar .avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .badge-soft-info {
+        background-color: rgba(23, 162, 184, 0.1);
+        color: #17a2b8;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 12px;
+    }
+    
+    .badge-soft-success {
+        background-color: rgba(40, 167, 69, 0.1);
+        color: #28a745;
+    }
+    
+    .badge-soft-danger {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+    
+    .badge-soft-warning {
+        background-color: rgba(255, 193, 7, 0.1);
+        color: #ffc107;
+    }
+    
+    .badge-soft-secondary {
+        background-color: rgba(108, 117, 125, 0.1);
+        color: #6c757d;
+    }
+    
+    .set-star {
+        color: #ffc107;
+        font-size: 14px;
+    }
+    
+    .set-star .filled {
+        color: #ffc107;
+    }
+    
+    .social-links li {
+        list-style: none;
+        margin: 0 3px;
+    }
+    
+    .social-links li a {
+        color: #6c757d;
+        font-size: 16px;
+        transition: all 0.3s;
+    }
+    
+    .social-links li a:hover {
+        color: #0d8f81;
+    }
+    
+    .action-icon {
+        font-size: 18px;
+        color: #6c757d;
+    }
+    
+    .filter-section {
+        margin-bottom: 20px;
+    }
+    
+    .filter-section ul {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 0;
+        padding: 0;
+        list-style: none;
+    }
+    
+    .filter-section ul li {
+        list-style: none;
+    }
+    
+    .view-icons .btn-link {
+        color: #6c757d;
+        font-size: 18px;
+        padding: 5px;
+    }
+    
+    .view-icons .btn-link.active {
+        color: #0d8f81;
+    }
+    
+    .form-sort select {
+        border: 1px solid #e5e5e5;
+        padding: 8px 12px;
+        border-radius: 5px;
+        background: white;
+        font-size: 14px;
+        cursor: pointer;
+    }
+    
+    .search-set {
+        position: relative;
+    }
+    
+    .search-set .search-input {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+    
+    .search-set .btn-searchset {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 1;
+        color: #6c757d;
+        background: transparent;
+        border: none;
+        padding: 0;
+    }
+    
+    .search-set input {
+        padding-left: 35px;
+        height: 38px;
+        border: 1px solid #e5e5e5;
+        border-radius: 5px;
+        width: 250px;
+        font-size: 14px;
+    }
+    
+    .search-set input:focus {
+        outline: none;
+        border-color: #0d8f81;
+    }
+    
+    /* Filter Card Styles */
+    .filter-card {
+        background: #fff;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .filter-card .card-body {
+        padding: 20px;
+    }
+    
+    .filter-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 8px;
+        display: block;
+    }
+    
+    /* Style form inputs */
+    #filterForm input,
+    #filterForm select {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #e5e5e5;
+        border-radius: 5px;
+        font-size: 14px;
+        background: #fff;
+        transition: all 0.3s;
+    }
+    
+    #filterForm input:focus,
+    #filterForm select:focus {
+        outline: none;
+        border-color: #0d8f81;
+        box-shadow: 0 0 0 2px rgba(13,143,129,0.1);
+    }
+    
+    #filterForm select {
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236c757d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 14px;
+    }
+    
+    /* Statistics Cards */
+    .stat-card {
+        transition: transform 0.3s;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    /* Alert messages */
+    .alert {
+        padding: 12px 20px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+    }
+    
+    .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    
+    .alert-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    
+    .btn-success {
+        background-color: #0d8f81;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 5px;
+        color: white;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+    
+    .btn-success:hover {
+        background-color: #0a6e63;
+    }
+    
+    .btn-secondary {
+        background-color: #6c757d;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 5px;
+        color: white;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+    
+    .btn-secondary:hover {
+        background-color: #5a6268;
+    }
+    
+    @media (max-width: 768px) {
+        .filter-section ul {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .table-responsive {
+            overflow-x: auto;
+        }
+        
+        .title-head {
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .stat-cards .card {
+            margin-bottom: 15px;
+        }
+        
+        .search-set input {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="content container-fluid">
+        
+        <!-- Display Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+        
+        <div class="page-header">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <h3 class="page-title">Contacts</h3>
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'customers:customer_list' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Contacts</li>
+                    </ul>
+                </div>
+                <div class="col-md-8 float-end ms-auto">
+                    <div class="d-flex title-head justify-content-end">
+                        <div class="view-icons me-3">
+                            <a href="#" class="grid-view btn btn-link"><i class="las la-redo-alt"></i></a>
+                            <a href="#" class="list-view btn btn-link" id="collapse-header"><i class="las la-expand-arrows-alt"></i></a>
+                            <a href="javascript:void(0);" class="list-view btn btn-link" id="filter_search"><i class="las la-filter"></i></a>
+                        </div>
+                        <div class="form-sort me-3">
+                            <a href="javascript:void(0);" class="list-view btn btn-link" data-bs-toggle="modal" data-bs-target="#export">
+                                <i class="las la-file-export"></i> Export
+                            </a>
+                        </div>
+                        <a href="{% url 'customers:customer_create' %}" class="btn add-btn">
+                            <i class="la la-plus-circle"></i> Add Contact
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards Row -->
+        <div class="row stat-cards">
+            <div class="col-xl-3 col-md-6">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted">Total Customers</h6>
+                                <h3 class="mb-0">{{ total_customers }}</h3>
+                            </div>
+                            <div>
+                                <i class="las la-users fa-2x text-primary"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted">Active Customers</h6>
+                                <h3 class="mb-0">{{ active_customers }}</h3>
+                            </div>
+                            <div>
+                                <i class="las la-user-check fa-2x text-success"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted">Total Revenue</h6>
+                                <h3 class="mb-0">${{ total_revenue|floatformat:2 }}</h3>
+                            </div>
+                            <div>
+                                <i class="las la-chart-line fa-2x text-info"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted">Average Rating</h6>
+                                <h3 class="mb-0">{{ avg_rating|floatformat:1 }} ★</h3>
+                            </div>
+                            <div>
+                                <i class="las la-star fa-2x text-warning"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="filter-filelds" id="filter_inputs" style="display: none;">
+            <div class="filter-card">
+                <div class="card-body">
+                    <form method="get" id="filterForm">
+                        <div class="row">
+                            <div class="col-xl-3 col-md-6">
+                                <div class="mb-3">
+                                    <label class="filter-label">Search</label>
+                                    {{ form.search }}
+                                </div>
+                            </div>
+                            <div class="col-xl-2 col-md-6">
+                                <div class="mb-3">
+                                    <label class="filter-label">Status</label>
+                                    {{ form.status }}
+                                </div>
+                            </div>
+                            <div class="col-xl-2 col-md-6">
+                                <div class="mb-3">
+                                    <label class="filter-label">Customer Type</label>
+                                    {{ form.customer_type }}
+                                </div>
+                            </div>
+                            <div class="col-xl-2 col-md-6">
+                                <div class="mb-3">
+                                    <label class="filter-label">Country</label>
+                                    {{ form.country }}
+                                </div>
+                            </div>
+                            <div class="col-xl-3">
+                                <div class="mb-3">
+                                    <label class="filter-label">&nbsp;</label>
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" class="btn btn-success w-100">
+                                            <i class="las la-search"></i> Search
+                                        </button>
+                                        <a href="{% url 'customers:customer_list' %}" class="btn btn-secondary w-100">
+                                            <i class="las la-redo-alt"></i> Reset
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Action Buttons -->
+        <div class="filter-section">
+            <ul>
+                <li>
+                    <div class="view-icons">
+                        <a href="javascript:void(0);" class="list-view btn btn-link active"><i class="las la-list"></i></a>
+                        <a href="javascript:void(0);" class="grid-view btn btn-link"><i class="las la-th"></i></a>
+                    </div>
+                </li>
+                <li>
+                    <div class="form-sort">
+                        <i class="las la-sort-alpha-up-alt"></i>
+                        <select class="select" id="sortSelect">
+                            <option value="name_asc">Sort By Name A-Z</option>
+                            <option value="name_desc">Sort By Name Z-A</option>
+                            <option value="newest">Newest First</option>
+                            <option value="oldest">Oldest First</option>
+                            <option value="rating_high">Highest Rating</option>
+                            <option value="rating_low">Lowest Rating</option>
+                        </select>
+                    </div>
+                </li>
+                <li>
+                    <button class="btn btn-link" id="toggleFilterBtn">
+                        <i class="las la-filter me-2"></i> Filter
+                    </button>
+                </li>
+                <li class="ms-auto">
+                    <div class="search-set">
+                        <div class="search-input">
+                            <a href="#" class="btn-searchset"><i class="las la-search"></i></a>
+                            <input type="search" class="form-control" placeholder="Search in table..." id="tableSearch">
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Customer Table -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="table-responsive">
+                    <table class="table table-striped custom-table datatable contact-table" id="customerTable">
+                        <thead>
+                            <tr>
+                                <th width="30"></th>
+                                <th>Name</th>
+                                <th>Phone</th>
+                                <th>Email</th>
+                                <th>Tags</th>
+                                <th>Location</th>
+                                <th>Rating</th>
+                                <th>Owner</th>
+                                <th>Contact</th>
+                                <th>Status</th>
+                                <th class="text-end" width="80">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for customer in customers %}
+                            <tr>
+                                <td>
+                                    <div class="set-star star-select">
+                                        <i class="fa fa-star {% if customer.rating >= 1 %}filled{% endif %}"></i>
+                                    </div>
+                                </td>
+                                <td>
+                                    <h2 class="table-avatar d-flex align-items-center">
+                                        <a href="{% url 'customers:customer_detail' customer.pk %}" class="avatar">
+                                            <img src="https://ui-avatars.com/api/?name={{ customer.first_name|urlencode }}+{{ customer.last_name|urlencode }}&background=0D8F81&color=fff&size=40" alt="Avatar">
+                                        </a>
+                                        <a href="{% url 'customers:customer_detail' customer.pk %}" class="profile-split d-flex flex-column ms-2">
+                                            <strong>{{ customer.get_full_name }}</strong>
+                                            <span class="text-muted small">{{ customer.company_name|default:"Individual" }}</span>
+                                        </a>
+                                    </h2>
+                                </td>
+                                <td>{{ customer.phone }}</td>
+                                <td>{{ customer.email }}</td>
+                                <td>
+                                    <div class="d-flex flex-wrap gap-1">
+                                        {% for tag in customer.get_tag_list|slice:":2" %}
+                                        <span class="badge badge-soft-info">{{ tag }}</span>
+                                        {% empty %}
+                                        <span class="badge badge-soft-secondary">No tags</span>
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                                <td>{{ customer.country }}</td>
+                                <td>
+                                    <div class="set-star d-flex align-items-center">
+                                        {% for i in "12345"|make_list %}
+                                            {% if forloop.counter <= customer.rating %}
+                                                <i class="fa fa-star filled text-warning"></i>
+                                            {% elif forloop.counter <= customer.rating|add:0.5 %}
+                                                <i class="fa fa-star-half-alt filled text-warning"></i>
+                                            {% else %}
+                                                <i class="fa fa-star text-muted"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                        <span class="ms-1">{{ customer.rating|floatformat:1 }}</span>
+                                    </div>
+                                </td>
+                                <td>{{ customer.owner.get_full_name|default:"Unassigned" }}</td>
+                                <td>
+                                    <ul class="social-links d-flex align-items-center mb-0">
+                                        <li><a href="mailto:{{ customer.email }}" class="btn btn-sm btn-outline-primary"><i class="la la-envelope"></i></a></li>
+                                        <li><a href="tel:{{ customer.phone }}" class="btn btn-sm btn-outline-success"><i class="la la-phone-volume"></i></a></li>
+                                    </ul>
+                                </td>
+                                <td>
+                                    <span class="badge badge-soft-{% if customer.status == 'active' %}success{% elif customer.status == 'inactive' %}danger{% else %}warning{% endif %}">
+                                        {{ customer.get_status_display }}
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="dropdown dropdown-action">
+                                        <a href="#" class="action-icon dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="material-icons">more_vert</i>
+                                        </a>
+                                        <div class="dropdown-menu dropdown-menu-right">
+                                            <a class="dropdown-item" href="{% url 'customers:customer_edit' customer.pk %}">
+                                                <i class="fa-solid fa-pencil"></i> Edit
+                                            </a>
+                                            <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#delete_contact" onclick="setDeleteId({{ customer.pk }}, '{{ customer.get_full_name }}')">
+                                                <i class="fa-regular fa-trash-can"></i> Delete
+                                            </a>
+                                            <a class="dropdown-item" href="{% url 'customers:customer_detail' customer.pk %}">
+                                                <i class="fa-regular fa-eye"></i> Preview
+                                            </a>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="11" class="text-center py-5">
+                                    <i class="las la-user-friends fa-3x text-muted mb-3"></i>
+                                    <h5>No customers found</h5>
+                                    <p class="text-muted">Click "Add Contact" to create your first customer.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if customers.has_other_pages %}
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <ul class="pagination justify-content-center flex-wrap">
+                            {% if customers.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1" aria-label="First">
+                                        <i class="las la-angle-double-left"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ customers.previous_page_number }}" aria-label="Previous">
+                                        <i class="las la-angle-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for num in customers.paginator.page_range %}
+                                {% if customers.number == num %}
+                                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                {% elif num > customers.number|add:'-3' and num < customers.number|add:'3' %}
+                                    <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if customers.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ customers.next_page_number }}" aria-label="Next">
+                                        <i class="las la-angle-right"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ customers.paginator.num_pages }}" aria-label="Last">
+                                        <i class="las la-angle-double-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                        <div class="text-center text-muted mt-2">
+                            <small>Showing {{ customers.start_index }} to {{ customers.end_index }} of {{ customers.paginator.count }} entries</small>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal custom-modal fade" id="delete_contact" role="dialog">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body p-4">
+                <div class="success-message text-center">
+                    <div class="success-popup-icon bg-danger mx-auto mb-3" style="width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="la la-trash-restore fa-2x text-white"></i>
+                    </div>
+                    <h4 class="mb-3">Are you sure?</h4>
+                    <p class="mb-4" id="deleteMessage">You want to delete this contact? This action cannot be undone.</p>
+                    <form id="deleteForm" method="post">
+                        {% csrf_token %}
+                        <div class="d-flex gap-2 justify-content-center">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-danger">Yes, Delete</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal custom-modal fade modal-padding" id="export" role="dialog">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header header-border justify-content-between p-3">
+                <h5 class="modal-title">Export Customers</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form action="{% url 'customers:export_customers' %}" method="get">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold mb-3">Export Format</label>
+                        <div class="d-flex gap-3">
+                            <div class="form-check">
+                                <input type="radio" class="form-check-input" name="format" value="csv" id="csv" checked>
+                                <label class="form-check-label" for="csv">CSV</label>
+                            </div>
+                            <div class="form-check">
+                                <input type="radio" class="form-check-input" name="format" value="excel" id="excel">
+                                <label class="form-check-label" for="excel">Excel</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 justify-content-end">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Export Now</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Toggle filter visibility
+const toggleBtn = document.getElementById('toggleFilterBtn');
+const filterDiv = document.getElementById('filter_inputs');
+
+if (toggleBtn && filterDiv) {
+    toggleBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (filterDiv.style.display === 'none' || filterDiv.style.display === '') {
+            filterDiv.style.display = 'block';
+            this.innerHTML = '<i class="las la-filter me-2"></i> Hide Filter';
+        } else {
+            filterDiv.style.display = 'none';
+            this.innerHTML = '<i class="las la-filter me-2"></i> Filter';
+        }
+    });
+}
+
+// Set delete form action
+let deleteCustomerId = null;
+
+function setDeleteId(id, name) {
+    deleteCustomerId = id;
+    const deleteForm = document.getElementById('deleteForm');
+    if (deleteForm) {
+        deleteForm.action = `/customers/${id}/delete/`;
+    }
+    const deleteMessage = document.getElementById('deleteMessage');
+    if (deleteMessage) {
+        deleteMessage.innerHTML = `You want to delete "<strong>${name}</strong>"? This action cannot be undone.`;
+    }
+}
+
+// Table search functionality
+const tableSearch = document.getElementById('tableSearch');
+if (tableSearch) {
+    tableSearch.addEventListener('keyup', function() {
+        const searchTerm = this.value.toLowerCase();
+        const table = document.getElementById('customerTable');
+        if (table) {
+            const tbody = table.getElementsByTagName('tbody')[0];
+            if (tbody) {
+                const rows = tbody.getElementsByTagName('tr');
+                for (let row of rows) {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(searchTerm) ? '' : 'none';
+                }
+            }
+        }
+    });
+}
+
+// Sort functionality
+const sortSelect = document.getElementById('sortSelect');
+if (sortSelect) {
+    sortSelect.addEventListener('change', function() {
+        const sortValue = this.value;
+        window.location.href = `?sort=${sortValue}`;
+    });
+}
+
+// Auto-hide alerts after 3 seconds
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(function(alert) {
+            alert.style.transition = 'opacity 0.5s';
+            alert.style.opacity = '0';
+            setTimeout(function() {
+                if (alert && alert.remove) {
+                    alert.remove();
+                }
+            }, 500);
+        });
+    }, 3000);
+});
+</script>
+{% endblock %}
