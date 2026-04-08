@@ -1,10 +1,7 @@
 <!DOCTYPE html>
-<html lang="en" dir="rtl">
-        {% include 'head.html' %}
-        {% load django_htmx %}
-       
-    <body class="text-left" hx-headers='{"x-csrftoken": "{{ csrf_token }}"}'>
-        <div class="app-admin-wrap layout-sidebar-large">
+<html lang="en" data-layout="vertical" data-topbar="light" data-sidebar="dark" data-sidebar-size="lg" data-sidebar-image="none">
+        {% include 'head.html' %}       
+    <body>
         {% block header %}
         {% include 'header.html' %}
         {% endblock %}
@@ -12,6 +9,5 @@
         {% block content %}{% endblock %}
         {% include 'scripts.html' %}
         {% block extra_scripts %}{% endblock %}
-        </div>
     </body>
 </html>
