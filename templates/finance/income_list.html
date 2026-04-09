@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="content container-fluid">
+        <div class="page-header">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h3 class="page-title">Income</h3>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="{% url 'finance:income_create' %}" class="btn btn-success me-2">Add Income</a>
+                    <!-- <a href="{% url 'finance:expense_create' %}" class="btn btn-primary">Add Expense</a> -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5>Total Income AFN</h5>
+                        <h3>{{ total_afn }}</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5>Total Income USD</h5>
+                        <h3>{{ total_usd }}</h3>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    <div class="card mb-3">
+    <div class="card-body">
+        <div class="row">
+
+            <div class="col-md-3">
+                <input type="text" id="search" class="form-control" placeholder="Search title...">
+            </div>
+
+            <div class="col-md-2">
+                <select id="source" class="form-select">
+                    <option value="">All Source</option>
+                    <option value="project">Project</option>
+                    <option value="business">Business</option>
+                    <option value="sale">Sale</option>
+                    <option value="service">Service</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <select id="currency" class="form-select">
+                    <option value="">All Currency</option>
+                    <option value="AFN">AFN</option>
+                    <option value="USD">USD</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <input type="date" id="from_date" class="form-control">
+            </div>
+
+            <div class="col-md-2">
+                <input type="date" id="to_date" class="form-control">
+            </div>
+
+            <div class="col-md-1">
+                <button onclick="printPage()" class="btn btn-dark w-100">
+                    🖨️
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+        <!-- Income List -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Income List</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Title</th>
+                                <th>Source</th>
+                                <th>Amount</th>
+                                <th>Currency</th>
+                                <th>Date</th>
+                                <th>Note</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            {% include 'finance/search_income.html' %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expense List -->
+        <!-- <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Expense List</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Title</th>
+                                <th>Category</th>
+                                <th>Amount</th>
+                                <th>Currency</th>
+                                <th>Date</th>
+                                <th>Note</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in expenses %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ item.title }}</td>
+                                <td>{{ item.get_category_display }}</td>
+                                <td>{{ item.amount }}</td>
+                                <td>{{ item.currency }}</td>
+                                <td>{{ item.date }}</td>
+                                <td>{{ item.note|default:"-" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center">No expense records found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div> -->
+    </div>
+</div>
+<script>
+function fetchData() {
+    let search = document.getElementById('search').value;
+    let source = document.getElementById('source').value;
+    let currency = document.getElementById('currency').value;
+    let from_date = document.getElementById('from_date').value;
+    let to_date = document.getElementById('to_date').value;
+
+    fetch(`?search=${search}&source=${source}&currency=${currency}&from_date=${from_date}&to_date=${to_date}`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById('table-body').innerHTML = data.html;
+    });
+}
+
+// events
+document.querySelectorAll('#search, #source, #currency, #from_date, #to_date')
+.forEach(el => {
+    el.addEventListener('keyup', fetchData);
+    el.addEventListener('change', fetchData);
+});
+</script>
+<script>
+function printPage() {
+    window.print();
+}
+</script>
+
+<style>
+@media print {
+    .btn, .card-header, .page-header {
+        display: none !important;
+    }
+}
+</style>
+{% endblock %}
