@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="content container-fluid">
+        <div class="page-header">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h3 class="page-title">Expense</h3>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="{% url 'finance:expense_create' %}" class="btn btn-primary">Add Expense</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5>Total Expense AFN</h5>
+                        <h3 id="total-afn">{{ total_afn }}</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5>Total Expense USD</h5>
+                        <h3 id="total-usd">{{ total_usd }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="row">
+
+                    <div class="col-md-3">
+                        <input type="text" id="search" class="form-control" placeholder="Search title...">
+                    </div>
+
+                    <div class="col-md-2">
+                        <select id="category" class="form-select">
+                            <option value="">All Category</option>
+                            <option value="salary">Salary</option>
+                            <option value="rent">Rent</option>
+                            <option value="food">Food</option>
+                            <option value="transport">Transport</option>
+                            <option value="electricity">Electricity</option>
+                            <option value="internet">Internet</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-2">
+                        <select id="currency" class="form-select">
+                            <option value="">All Currency</option>
+                            <option value="AFN">AFN</option>
+                            <option value="USD">USD</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-2">
+                        <input type="date" id="from_date" class="form-control">
+                    </div>
+
+                    <div class="col-md-2">
+                        <input type="date" id="to_date" class="form-control">
+                    </div>
+
+                    <div class="col-md-1">
+                        <button onclick="printPage()" class="btn btn-dark w-100" type="button">🖨️</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Expense List</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Title</th>
+                                <th>Category</th>
+                                <th>Amount</th>
+                                <th>Currency</th>
+                                <th>Date</th>
+                                <th>Note</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            {% include 'finance/search_expense.html' %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function fetchData() {
+    let search = document.getElementById('search').value;
+    let category = document.getElementById('category').value;
+    let currency = document.getElementById('currency').value;
+    let from_date = document.getElementById('from_date').value;
+    let to_date = document.getElementById('to_date').value;
+
+    const params = new URLSearchParams({
+        search: search,
+        category: category,
+        currency: currency,
+        from_date: from_date,
+        to_date: to_date
+    });
+
+    fetch(`?${params.toString()}`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById('table-body').innerHTML = data.html;
+
+        const afnBox = document.getElementById('total-afn');
+        const usdBox = document.getElementById('total-usd');
+
+        if (afnBox) afnBox.innerText = data.total_afn;
+        if (usdBox) usdBox.innerText = data.total_usd;
+    });
+}
+
+document.querySelectorAll('#search, #category, #currency, #from_date, #to_date')
+.forEach(el => {
+    el.addEventListener('keyup', fetchData);
+    el.addEventListener('change', fetchData);
+});
+
+function printPage() {
+    window.print();
+}
+</script>
+
+<style>
+@media print {
+    .btn, .card-header, .page-header {
+        display: none !important;
+    }
+}
+</style>
+{% endblock %}
