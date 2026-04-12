@@ -1,6 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from .models import Customer, CustomerNote
+from .models import *
 
 class CustomerForm(forms.ModelForm):
     class Meta:
@@ -59,3 +60,68 @@ class CustomerSearchForm(forms.Form):
         'class': 'form-control',
         'placeholder': 'Country'
     }))
+
+
+
+
+class ProjectForm(forms.ModelForm):
+    class Meta:
+        model = Project
+        fields = [
+            'project_name', 'customer', 'description',
+            'total_price', 'paid_amount', 'start_date', 'end_date',
+            'status', 'priority', 'progress_percentage', 'notes'
+        ]
+        widgets = {
+            'project_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter project name'}),
+            'customer': forms.Select(attrs={'class': 'form-select'}),
+            'description': forms.Textarea(attrs={'rows': 3, 'class': 'form-control', 'placeholder': 'Project description'}),
+            'total_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'paid_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'start_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'end_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'status': forms.Select(attrs={'class': 'form-select'}),
+            'priority': forms.Select(attrs={'class': 'form-select'}),
+            'progress_percentage': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 100}),
+            'notes': forms.Textarea(attrs={'rows': 3, 'class': 'form-control', 'placeholder': 'Additional notes'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Add CSS classes to all fields
+        for field_name, field in self.fields.items():
+            if field.widget.__class__.__name__ not in ['Select', 'Textarea']:
+                field.widget.attrs['class'] = 'form-control'
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        total_price = cleaned_data.get('total_price', 0)
+        paid_amount = cleaned_data.get('paid_amount', 0)
+        
+        if paid_amount > total_price:
+            raise ValidationError('Paid amount cannot be greater than total price.')
+        
+        return cleaned_data
+
+
+class PaymentForm(forms.ModelForm):
+    class Meta:
+        model = Payment
+        fields = ['amount', 'payment_date', 'payment_method', 'reference_number', 'notes']
+        widgets = {
+            'amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'payment_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'payment_method': forms.Select(attrs={'class': 'form-select'}),
+            'reference_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Transaction ID / Check Number'}),
+            'notes': forms.Textarea(attrs={'rows': 2, 'class': 'form-control', 'placeholder': 'Payment notes'}),
+        }
+
+
+class ProjectSearchForm(forms.Form):
+    search = forms.CharField(required=False, widget=forms.TextInput(attrs={
+        'class': 'form-control',
+        'placeholder': 'Search by project name or ID...'
+    }))
+    status = forms.ChoiceField(required=False, choices=[('', 'All Status')] + Project.STATUS_CHOICES)
+    priority = forms.ChoiceField(required=False, choices=[('', 'All Priority')] + Project.PRIORITY_CHOICES)
+    customer = forms.ModelChoiceField(required=False, queryset=Customer.objects.all(), empty_label="All Customers")

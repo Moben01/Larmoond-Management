@@ -1,0 +1,670 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ project.project_name }} - Project Details{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Project Details Styles */
+    .project-title {
+        margin-bottom: 15px;
+    }
+    
+    .project-title h5 {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    
+    .text-ellipsis {
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .text-xs {
+        font-size: 12px;
+        font-weight: 600;
+    }
+    
+    /* Badge Styles */
+    .badge-priority-high, .badge-priority-urgent {
+        background: #dc3545;
+        color: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        display: inline-block;
+    }
+    .badge-priority-medium {
+        background: #ffc107;
+        color: #333;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        display: inline-block;
+    }
+    .badge-priority-low {
+        background: #28a745;
+        color: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        display: inline-block;
+    }
+    
+    .badge-status-planning {
+        background: #6c757d;
+        color: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        display: inline-block;
+    }
+    .badge-status-in_progress {
+        background: #0d8f81;
+        color: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        display: inline-block;
+    }
+    .badge-status-on_hold {
+        background: #fd7e14;
+        color: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        display: inline-block;
+    }
+    .badge-status-completed {
+        background: #28a745;
+        color: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        display: inline-block;
+    }
+    .badge-status-cancelled {
+        background: #dc3545;
+        color: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        display: inline-block;
+    }
+    
+    /* Table Styles */
+    .table-border {
+        border: 1px solid #e5e5e5;
+    }
+    
+    .table-border td, .table-border th {
+        padding: 12px 15px;
+        border-bottom: 1px solid #e5e5e5;
+    }
+    
+    .table-border tr:last-child td {
+        border-bottom: none;
+    }
+    
+    /* Progress Bar */
+    .progress-xs {
+        height: 6px;
+        border-radius: 3px;
+    }
+    
+    /* Card Styles */
+    .card {
+        border: none;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .card-body {
+        padding: 20px;
+    }
+    
+    .card-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #e5e5e5;
+    }
+    
+    /* Project Members */
+    .project-members {
+        margin-top: 15px;
+    }
+    
+    .project-members .avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        margin-right: 5px;
+    }
+    
+    .project-members .avatar img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    
+    /* List Box */
+    .list-box {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .list-box li {
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .list-box li:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+    
+    .list-item {
+        display: flex;
+        align-items: center;
+    }
+    
+    .list-left {
+        margin-right: 15px;
+    }
+    
+    .list-left .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+    }
+    
+    .list-left .avatar img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    
+    .list-body {
+        flex: 1;
+    }
+    
+    .message-author {
+        font-weight: 600;
+        color: #333;
+        display: block;
+    }
+    
+    .message-content {
+        font-size: 12px;
+        color: #6c757d;
+    }
+    
+    /* Payment Table */
+    .payment-table {
+        width: 100%;
+        margin-bottom: 0;
+    }
+    
+    .payment-table th {
+        background: #f8f9fa;
+        padding: 12px;
+        font-weight: 600;
+        border-bottom: 1px solid #e5e5e5;
+    }
+    
+    .payment-table td {
+        padding: 10px 12px;
+        vertical-align: middle;
+        border-bottom: 1px solid #e5e5e5;
+    }
+    
+    /* Buttons */
+    .btn-primary {
+        background-color: #0d8f81;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 5px;
+    }
+    
+    .btn-primary:hover {
+        background-color: #0a6e63;
+    }
+    
+    .btn-success {
+        background-color: #28a745;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 5px;
+    }
+    
+    .btn-success:hover {
+        background-color: #218838;
+    }
+    
+    .btn-white {
+        background: white;
+        border: 1px solid #e5e5e5;
+        color: #333;
+    }
+    
+    .btn-white:hover {
+        background: #f8f9fa;
+    }
+    
+    /* Modal Styles */
+    .modal-content {
+        border-radius: 10px;
+        border: none;
+    }
+    
+    .modal-header {
+        border-bottom: 1px solid #e5e5e5;
+        padding: 15px 20px;
+    }
+    
+    .modal-body {
+        padding: 20px;
+    }
+    
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 5px;
+        display: block;
+    }
+    
+    .form-control, .form-select {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #e5e5e5;
+        border-radius: 5px;
+        font-size: 14px;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        outline: none;
+        border-color: #0d8f81;
+        box-shadow: 0 0 0 2px rgba(13,143,129,0.1);
+    }
+    
+    /* Uploaded Box */
+    .uploaded-box {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 10px;
+        text-align: center;
+        margin-bottom: 15px;
+    }
+    
+    .uploaded-img {
+        margin-bottom: 8px;
+    }
+    
+    .uploaded-img img {
+        width: 100%;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 5px;
+    }
+    
+    .uploaded-img-name {
+        font-size: 12px;
+        color: #6c757d;
+    }
+    
+    /* Files List */
+    .files-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .files-list li {
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #e5e5e5;
+    }
+    
+    .files-list li:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+    
+    .files-cont {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    .file-type {
+        width: 50px;
+    }
+    
+    .files-icon {
+        font-size: 32px;
+        color: #dc3545;
+    }
+    
+    .files-info {
+        flex: 1;
+    }
+    
+    .file-name {
+        font-weight: 600;
+        margin-bottom: 5px;
+        display: block;
+    }
+    
+    .file-name a {
+        color: #333;
+        text-decoration: none;
+    }
+    
+    .file-name a:hover {
+        color: #0d8f81;
+    }
+    
+    .file-author {
+        font-size: 12px;
+        color: #6c757d;
+    }
+    
+    .file-date {
+        font-size: 12px;
+        color: #6c757d;
+    }
+    
+    .file-size {
+        font-size: 12px;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+    
+    .files-action {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .page-header .row {
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .col-auto {
+            text-align: left !important;
+        }
+        
+        .files-cont {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .file-type {
+            width: auto;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="content container-fluid">
+        
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h3 class="page-title">{{ project.project_name }}</h3>
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'customers:customer_list' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'customers:project_list' %}">Projects</a></li>
+                        <li class="breadcrumb-item active">{{ project.project_name }}</li>
+                    </ul>
+                </div>
+                <div class="col-auto float-end ms-auto">
+                    <a href="{% url 'customers:project_edit' project.pk %}" class="btn add-btn">
+                        <i class="fa-solid fa-pencil"></i> Edit Project
+                    </a>
+                    <a href="{% url 'customers:add_payment' project.pk %}" class="btn btn-white">
+                        <i class="fa-solid fa-plus"></i> Add Payment
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Left Column - Main Content -->
+            <div class="col-lg-8 col-xl-9">
+                <!-- Project Info Card -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="project-title">
+                            <h5 class="card-title">{{ project.project_name }}</h5>
+                            <small class="block text-ellipsis m-b-15">
+                                <span class="text-xs">{{ project.payments.count }}</span> 
+                                <span class="text-muted">payments, </span>
+                                <span class="text-xs">{{ project.progress_percentage }}%</span> 
+                                <span class="text-muted">complete</span>
+                            </small>
+                        </div>
+                        <p>{{ project.description|default:"No description provided." }}</p>
+                        <p>{{ project.notes|default:"" }}</p>
+                    </div>
+                </div>
+                
+                <!-- Payment History Card -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title m-b-20">Payment History</h5>
+                        {% if payments %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Amount</th>
+                                        <th>Method</th>
+                                        <th>Reference</th>
+                                        <th>Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for payment in payments %}
+                                    <tr>
+                                        <td>{{ payment.payment_date|date:"d M Y" }}</td>
+                                        <td>${{ payment.amount|floatformat:2 }}</td>
+                                        <td>{{ payment.get_payment_method_display }}</td>
+                                        <td>{{ payment.reference_number|default:"—" }}</td>
+                                        <td>{{ payment.notes|default:"—" }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th colspan="2"></th>
+                                        <th colspan="2">Total Paid:</th>
+                                        <th><strong>${{ project.paid_amount|floatformat:2 }}</strong></th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-center py-4 text-muted">No payments recorded yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Column - Sidebar Info -->
+            <div class="col-lg-4 col-xl-3">
+                <!-- Project Details Card -->
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title m-b-15">Project Details</h6>
+                        <table class="table table-border">
+                            <tbody>
+                                <tr>
+                                    <td>Customer:</td>
+                                    <td class="text-end">
+                                        <a href="{% url 'customers:customer_detail' project.customer.pk %}">
+                                            {{ project.customer.get_full_name }}
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Project ID:</td>
+                                    <td class="text-end">{{ project.project_id }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Total Price:</td>
+                                    <td class="text-end">${{ project.total_price|floatformat:2 }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Paid Amount:</td>
+                                    <td class="text-end text-success">${{ project.paid_amount|floatformat:2 }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Remaining:</td>
+                                    <td class="text-end text-danger">${{ project.remaining_amount|floatformat:2 }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Created:</td>
+                                    <td class="text-end">{{ project.created_at|date:"d M Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Deadline:</td>
+                                    <td class="text-end">{{ project.end_date|date:"d M Y"|default:"Not set" }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Priority:</td>
+                                    <td class="text-end">
+                                        <span class="badge-priority-{{ project.priority }}">{{ project.get_priority_display }}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Status:</td>
+                                    <td class="text-end">
+                                        <span class="badge-status-{{ project.status }}">{{ project.get_status_display }}</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p class="m-b-5">Progress <span class="text-success float-end">{{ project.progress_percentage }}%</span></p>
+                        <div class="progress progress-xs mb-0">
+                            <div class="progress-bar" role="progressbar" style="width: {{ project.progress_percentage }}%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Customer Information Card -->
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title m-b-20">Customer Information</h6>
+                        <ul class="list-box">
+                            <li>
+                                <div class="list-item">
+                                    <div class="list-left">
+                                        <span class="avatar">
+                                            <img src="https://ui-avatars.com/api/?name={{ project.customer.first_name }}+{{ project.customer.last_name }}&background=0D8F81&color=fff&size=40" alt="User Image">
+                                        </span>
+                                    </div>
+                                    <div class="list-body">
+                                        <span class="message-author">{{ project.customer.get_full_name }}</span>
+                                        <div class="clearfix"></div>
+                                        <span class="message-content">{{ project.customer.email }}</span>
+                                        <span class="message-content">{{ project.customer.phone }}</span>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Payment Modal -->
+<div class="modal custom-modal fade" id="addPaymentModal" role="dialog">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Payment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{% url 'customers:add_payment' project.pk %}">
+                    {% csrf_token %}
+                    <div class="input-block mb-3">
+                        <label class="col-form-label">Amount <span class="text-danger">*</span></label>
+                        <input class="form-control" type="number" name="amount" step="0.01" placeholder="Enter amount" required>
+                    </div>
+                    <div class="input-block mb-3">
+                        <label class="col-form-label">Payment Date <span class="text-danger">*</span></label>
+                        <div class="cal-icon">
+                            <input class="form-control datetimepicker" type="text" name="payment_date" required>
+                        </div>
+                    </div>
+                    <div class="input-block mb-3">
+                        <label class="col-form-label">Payment Method</label>
+                        <select class="select" name="payment_method">
+                            <option value="cash">Cash</option>
+                            <option value="bank_transfer">Bank Transfer</option>
+                            <option value="check">Check</option>
+                            <option value="online">Online Payment</option>
+                        </select>
+                    </div>
+                    <div class="input-block mb-3">
+                        <label class="col-form-label">Reference Number</label>
+                        <input class="form-control" type="text" name="reference_number" placeholder="Transaction ID / Check Number">
+                    </div>
+                    <div class="input-block mb-3">
+                        <label class="col-form-label">Notes</label>
+                        <textarea class="form-control" rows="3" name="notes" placeholder="Additional notes"></textarea>
+                    </div>
+                    <div class="submit-section">
+                        <button class="btn btn-primary submit-btn">Add Payment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Initialize datepicker
+$(document).ready(function() {
+    $('.datetimepicker').datetimepicker({
+        format: 'YYYY-MM-DD',
+        maxDate: new Date()
+    });
+    
+    // Set current date if empty
+    $('.datetimepicker').each(function() {
+        if (!$(this).val()) {
+            var today = new Date();
+            var year = today.getFullYear();
+            var month = String(today.getMonth() + 1).padStart(2, '0');
+            var day = String(today.getDate()).padStart(2, '0');
+            $(this).val(year + '-' + month + '-' + day);
+        }
+    });
+});
+</script>
+{% endblock %}

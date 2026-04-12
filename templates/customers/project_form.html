@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="content container-fluid">
+        <div class="page-header">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h3 class="page-title">{{ title }}</h3>
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'customers:customer_list' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'customers:project_list' %}">Projects</a></li>
+                        <li class="breadcrumb-item active">{{ title }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Basic Information</h5>
+                            <hr>
+                            <div class="mb-3">
+                                <label>Project Name *</label>
+                                {{ form.project_name }}
+                            </div>
+                            <div class="mb-3">
+                                <label>Customer *</label>
+                                {{ form.customer }}
+                            </div>
+                            <div class="mb-3">
+                                <label>Description</label>
+                                {{ form.description }}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h5>Financial Information</h5>
+                            <hr>
+                            <div class="mb-3">
+                                <label>Total Price *</label>
+                                {{ form.total_price }}
+                            </div>
+                            <div class="mb-3">
+                                <label>Paid Amount *</label>
+                                {{ form.paid_amount }}
+                            </div>
+                            <div class="mb-3">
+                                <label>Remaining Amount</label>
+                                <input type="text" class="form-control" id="remaining_amount" readonly>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h5>Timeline</h5>
+                            <hr>
+                            <div class="mb-3">
+                                <label>Start Date *</label>
+                                {{ form.start_date }}
+                            </div>
+                            <div class="mb-3">
+                                <label>End Date</label>
+                                {{ form.end_date }}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h5>Status & Progress</h5>
+                            <hr>
+                            <div class="mb-3">
+                                <label>Status</label>
+                                {{ form.status }}
+                            </div>
+                            <div class="mb-3">
+                                <label>Priority</label>
+                                {{ form.priority }}
+                            </div>
+                            <div class="mb-3">
+                                <label>Progress (%)</label>
+                                {{ form.progress_percentage }}
+                            </div>
+                        </div>
+                        
+                        <div class="col-12">
+                            <h5>Additional Notes</h5>
+                            <hr>
+                            <div class="mb-3">
+                                <label>Notes</label>
+                                {{ form.notes }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary">Save Project</button>
+                        <a href="{% url 'customers:project_list' %}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function calculateRemaining() {
+    let total = parseFloat(document.querySelector('[name="total_price"]').value) || 0;
+    let paid = parseFloat(document.querySelector('[name="paid_amount"]').value) || 0;
+    let remaining = total - paid;
+    document.getElementById('remaining_amount').value = '$' + remaining.toFixed(2);
+}
+document.querySelector('[name="total_price"]').addEventListener('input', calculateRemaining);
+document.querySelector('[name="paid_amount"]').addEventListener('input', calculateRemaining);
+calculateRemaining();
+</script>
+{% endblock %}

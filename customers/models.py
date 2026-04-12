@@ -122,3 +122,128 @@ class CustomerActivity(models.Model):
     description = models.TextField()
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+
+
+class Project(models.Model):
+    # Project Status Choices
+    STATUS_CHOICES = [
+        ('planning', 'Planning'),
+        ('in_progress', 'In Progress'),
+        ('on_hold', 'On Hold'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+    ]
+    
+    PRIORITY_CHOICES = [
+        ('low', 'Low'),
+        ('medium', 'Medium'),
+        ('high', 'High'),
+        ('urgent', 'Urgent'),
+    ]
+    
+    # Basic Information
+    project_id = models.CharField(max_length=50, unique=True, editable=False)
+    project_name = models.CharField(max_length=200)
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='projects')
+    description = models.TextField(blank=True, null=True)
+    
+    # Financial Information
+    total_price = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    paid_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    remaining_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, editable=False)
+    
+    # Dates
+    start_date = models.DateField()
+    end_date = models.DateField(blank=True, null=True)
+    actual_completion_date = models.DateField(blank=True, null=True)
+    
+    # Status & Priority
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='planning')
+    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='medium')
+    
+    # Progress
+    progress_percentage = models.IntegerField(default=0, help_text="Progress percentage (0-100)")
+    
+    # Additional Info
+    notes = models.TextField(blank=True, null=True)
+    
+    # Audit Fields (without user)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Project'
+        verbose_name_plural = 'Projects'
+    
+    def __str__(self):
+        return f"{self.project_id} - {self.project_name}"
+    
+    def save(self, *args, **kwargs):
+        # Calculate remaining amount
+        self.remaining_amount = self.total_price - self.paid_amount
+        
+        # Generate project ID if not exists
+        if not self.project_id:
+            current_year = timezone.now().year
+            last_project = Project.objects.filter(
+                project_id__startswith=f'PRJ-{current_year}'
+            ).order_by('-project_id').first()
+            
+            if last_project:
+                last_number = int(last_project.project_id.split('-')[-1])
+                new_number = last_number + 1
+            else:
+                new_number = 1
+            
+            self.project_id = f'PRJ-{current_year}-{str(new_number).zfill(6)}'
+        
+        # Update customer's total spent when project is completed
+        if self.status == 'completed' and self.actual_completion_date is None:
+            self.actual_completion_date = timezone.now().date()
+            # Update customer total spent
+            if self.customer:
+                self.customer.total_spent += self.paid_amount
+                self.customer.save()
+        
+        super().save(*args, **kwargs)
+    
+    def get_progress_bar_width(self):
+        return f"{self.progress_percentage}%"
+    
+    def get_remaining_percentage(self):
+        if self.total_price > 0:
+            return (self.remaining_amount / self.total_price) * 100
+        return 0
+
+
+class Payment(models.Model):
+    PAYMENT_METHODS = [
+        ('cash', 'Cash'),
+        ('bank_transfer', 'Bank Transfer'),
+        ('check', 'Check'),
+        ('online', 'Online Payment'),
+    ]
+    
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='payments')
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    payment_date = models.DateField(default=timezone.now)
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHODS, default='cash')
+    reference_number = models.CharField(max_length=100, blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-payment_date']
+    
+    def __str__(self):
+        return f"{self.project.project_name} - ${self.amount}"
+    
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Update project paid amount
+        total_paid = self.project.payments.aggregate(total=models.Sum('amount'))['total'] or 0
+        self.project.paid_amount = total_paid
+        self.project.save()

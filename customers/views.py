@@ -4,7 +4,9 @@ from django.core.paginator import Paginator
 from django.db.models import Q, Sum
 from django.http import HttpResponse
 from .models import Customer, CustomerNote, CustomerActivity
+from .models import *
 from .forms import CustomerForm, CustomerSearchForm, CustomerNoteForm
+from .forms import *
 import csv
 
 
@@ -229,3 +231,121 @@ def export_customers(request):
         ])
     
     return response
+
+
+
+
+
+
+
+
+# Add these views to your existing customers/views.py
+
+def project_list(request):
+    projects = Project.objects.all()
+    form = ProjectSearchForm(request.GET or None)
+    
+    if form.is_valid():
+        search = form.cleaned_data.get('search')
+        status = form.cleaned_data.get('status')
+        priority = form.cleaned_data.get('priority')
+        customer = form.cleaned_data.get('customer')
+        
+        if search:
+            projects = projects.filter(
+                Q(project_name__icontains=search) |
+                Q(project_id__icontains=search)
+            )
+        if status:
+            projects = projects.filter(status=status)
+        if priority:
+            projects = projects.filter(priority=priority)
+        if customer:
+            projects = projects.filter(customer=customer)
+    
+    total_projects = projects.count()
+    active_projects = projects.filter(status='in_progress').count()
+    completed_projects = projects.filter(status='completed').count()
+    total_revenue = projects.aggregate(total=Sum('paid_amount'))['total'] or 0
+    
+    paginator = Paginator(projects, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'projects': page_obj,
+        'form': form,
+        'total_projects': total_projects,
+        'active_projects': active_projects,
+        'completed_projects': completed_projects,
+        'total_revenue': total_revenue,
+    }
+    return render(request, 'customers/project_list.html', context)
+
+
+def project_detail(request, pk):
+    project = get_object_or_404(Project, pk=pk)
+    payments = project.payments.all()
+    
+    context = {
+        'project': project,
+        'payments': payments,
+    }
+    return render(request, 'customers/project_detail.html', context)
+
+
+def project_create(request):
+    if request.method == 'POST':
+        form = ProjectForm(request.POST)
+        if form.is_valid():
+            project = form.save()
+            messages.success(request, f'Project {project.project_id} created successfully!')
+            return redirect('customers:project_detail', pk=project.pk)
+    else:
+        form = ProjectForm()
+    
+    return render(request, 'customers/project_form.html', {'form': form, 'title': 'Create New Project'})
+
+
+def project_edit(request, pk):
+    project = get_object_or_404(Project, pk=pk)
+    
+    if request.method == 'POST':
+        form = ProjectForm(request.POST, instance=project)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Project {project.project_id} updated successfully!')
+            return redirect('customers:project_detail', pk=project.pk)
+    else:
+        form = ProjectForm(instance=project)
+    
+    return render(request, 'customers/project_form.html', {'form': form, 'title': 'Edit Project', 'project': project})
+
+
+def project_delete(request, pk):
+    project = get_object_or_404(Project, pk=pk)
+    
+    if request.method == 'POST':
+        project_id = project.project_id
+        project.delete()
+        messages.success(request, f'Project {project_id} deleted successfully!')
+        return redirect('customers:project_list')
+    
+    return render(request, 'customers/project_confirm_delete.html', {'project': project})
+
+
+def add_payment(request, pk):
+    project = get_object_or_404(Project, pk=pk)
+    
+    if request.method == 'POST':
+        form = PaymentForm(request.POST)
+        if form.is_valid():
+            payment = form.save(commit=False)
+            payment.project = project
+            payment.save()
+            messages.success(request, f'Payment of ${payment.amount} added successfully!')
+            return redirect('customers:project_detail', pk=project.pk)
+    else:
+        form = PaymentForm(initial={'payment_date': timezone.now().date()})
+    
+    return render(request, 'customers/add_payment.html', {'form': form, 'project': project})
