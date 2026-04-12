@@ -18,4 +18,17 @@ urlpatterns = [
     path('expenses/<int:pk>/delete/', views.expense_delete, name='expense_delete'),
 
     path('finance/dashboard/', views.finance_dashboard, name='dashboard'),
+
+    # income sources
+    path('income-sources/', views.income_source_list, name='income_source_list'),
+    path('income-sources/create/', views.income_source_create, name='income_source_create'),
+    path('income-sources/<int:pk>/update/', views.income_source_update, name='income_source_update'),
+    path('income-sources/<int:pk>/delete/', views.income_source_delete, name='income_source_delete'),
+
+    # expense category
+    path('expense-categories/', views.expense_category_list, name='expense_category_list'),
+    path('expense-categories/create/', views.expense_category_create, name='expense_category_create'),
+    path('expense-categories/<int:pk>/update/', views.expense_category_update, name='expense_category_update'),
+    path('expense-categories/<int:pk>/delete/', views.expense_category_delete, name='expense_category_delete'),
+
 ]

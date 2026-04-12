@@ -59,7 +59,9 @@ setTimeout(() => {
                     <h3 class="page-title">Income</h3>
                 </div>
                 <div class="col-md-6 text-md-end">
+                    <a href="{% url 'finance:income_source_list' %}" class="btn btn-success me-2">Source List</a>
                     <a href="{% url 'finance:income_create' %}" class="btn btn-success me-2">Add Income</a>
+                    <a href="{% url 'finance:income_source_create' %}" class="btn btn-success me-2">Add Source</a>
                     <!-- <a href="{% url 'finance:expense_create' %}" class="btn btn-primary">Add Expense</a> -->
                 </div>
             </div>
@@ -80,7 +82,7 @@ setTimeout(() => {
                     
                     <div class="card-body">
                         <h5>Total Income AFN</h5>
-                        <h3>{{ total_afn }}</h3>
+                        <h3 id="total-afn">{{ total_afn }}</h3>
                     </div>
                 </div>
             </div>
@@ -89,7 +91,7 @@ setTimeout(() => {
                 <div class="card">
                     <div class="card-body">
                         <h5>Total Income USD</h5>
-                        <h3>{{ total_usd }}</h3>
+                        <h3 id="total-usd">{{ total_usd }}</h3>
                     </div>
                 </div>
             </div>
@@ -106,11 +108,9 @@ setTimeout(() => {
             <div class="col-md-2">
                 <select id="source" class="form-select">
                     <option value="">All Source</option>
-                    <option value="project">Project</option>
-                    <option value="business">Business</option>
-                    <option value="sale">Sale</option>
-                    <option value="service">Service</option>
-                    <option value="other">Other</option>
+                    {% for item in sources %}
+                        <option value="{{ item.id }}">{{ item.name }}</option>
+                    {% endfor %}
                 </select>
             </div>
 
@@ -225,16 +225,24 @@ function fetchData() {
     .then(res => res.json())
     .then(data => {
         document.getElementById('table-body').innerHTML = data.html;
+
+        if (document.getElementById('total-afn')) {
+            document.getElementById('total-afn').innerText = data.total_afn;
+        }
+        if (document.getElementById('total-usd')) {
+            document.getElementById('total-usd').innerText = data.total_usd;
+        }
     });
 }
 
-// events
 document.querySelectorAll('#search, #source, #currency, #from_date, #to_date')
 .forEach(el => {
     el.addEventListener('keyup', fetchData);
     el.addEventListener('change', fetchData);
 });
 </script>
+
+
 <script>
 function printPage() {
     window.print();

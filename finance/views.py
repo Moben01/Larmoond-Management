@@ -8,16 +8,17 @@ from django.template.loader import render_to_string
 from django.db.models import Q, Sum
 from decimal import Decimal
 from django.db.models.functions import Coalesce
+from .models import IncomeSource, ExpenseCategory
+from .forms import IncomeSourceForm, ExpenseCategoryForm
 
 
 
 # === Income Views ===
 
-
 def income_list(request):
-    incomes = Income.objects.all().order_by('-date', '-id')
+    incomes = Income.objects.select_related('source').all().order_by('-date', '-id')
+    sources = IncomeSource.objects.filter(is_active=True).order_by('name')
 
-    # filters
     search = request.GET.get('search')
     source = request.GET.get('source')
     currency = request.GET.get('currency')
@@ -28,7 +29,7 @@ def income_list(request):
         incomes = incomes.filter(title__icontains=search)
 
     if source:
-        incomes = incomes.filter(source=source)
+        incomes = incomes.filter(source_id=source)
 
     if currency:
         incomes = incomes.filter(currency=currency)
@@ -42,17 +43,24 @@ def income_list(request):
     total_afn = incomes.filter(currency='AFN').aggregate(total=Sum('amount'))['total'] or 0
     total_usd = incomes.filter(currency='USD').aggregate(total=Sum('amount'))['total'] or 0
 
-    # 🔥 AJAX response
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        html = render_to_string('finance/search_income.html', {'incomes': incomes})
-        return JsonResponse({'html': html})
+        html = render_to_string(
+            'finance/search_income.html',
+            {'incomes': incomes},
+            request=request
+        )
+        return JsonResponse({
+            'html': html,
+            'total_afn': str(total_afn),
+            'total_usd': str(total_usd),
+        })
 
     return render(request, 'finance/income_list.html', {
         'incomes': incomes,
+        'sources': sources,
         'total_afn': total_afn,
         'total_usd': total_usd,
     })
-
 
 def income_create(request):
     if request.method == 'POST':
@@ -80,15 +88,16 @@ def income_update(request, pk):
 def income_delete(request, pk):
     income = get_object_or_404(Income, pk=pk)
     income.delete()
+    messages.warning(request, 'Expense was delete successfully!')
     return redirect('finance:income_list')
 
 
 
 # === Expense Views ===
 
-
 def expense_list(request):
-    expenses = Expense.objects.all().order_by('-date', '-id')
+    expenses = Expense.objects.select_related('category').all().order_by('-date', '-id')
+    categories = ExpenseCategory.objects.filter(is_active=True).order_by('name')
 
     search = request.GET.get('search')
     category = request.GET.get('category')
@@ -100,7 +109,7 @@ def expense_list(request):
         expenses = expenses.filter(title__icontains=search)
 
     if category:
-        expenses = expenses.filter(category=category)
+        expenses = expenses.filter(category_id=category)
 
     if currency:
         expenses = expenses.filter(currency=currency)
@@ -115,7 +124,11 @@ def expense_list(request):
     total_usd = expenses.filter(currency='USD').aggregate(total=Sum('amount'))['total'] or 0
 
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        html = render_to_string('finance/search_expense.html', {'expenses': expenses}, request=request)
+        html = render_to_string(
+            'finance/search_expense.html',
+            {'expenses': expenses},
+            request=request
+        )
         return JsonResponse({
             'html': html,
             'total_afn': str(total_afn),
@@ -124,10 +137,10 @@ def expense_list(request):
 
     return render(request, 'finance/expense_list.html', {
         'expenses': expenses,
+        'categories': categories,
         'total_afn': total_afn,
         'total_usd': total_usd,
     })
-
 
 def expense_create(request):
     if request.method == 'POST':
@@ -155,6 +168,7 @@ def expense_update(request, pk):
 def expense_delete(request, pk):
     expense = get_object_or_404(Expense, pk=pk)
     expense.delete()
+    messages.warning(request, 'Expense was delete successfully!')
     return redirect('finance:expense_list')
 
 
@@ -261,3 +275,106 @@ def finance_dashboard(request):
         'usd_status_text': usd_status_text,
     }
     return render(request, 'finance/dashboard.html', context)
+
+
+
+
+
+def income_source_list(request):
+    sources = IncomeSource.objects.all().order_by('name')
+    return render(request, 'finance/income_source_list.html', {
+        'sources': sources,
+    })
+
+
+def income_source_create(request):
+    if request.method == 'POST':
+        form = IncomeSourceForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Income source was created successfully!')
+            return redirect('finance:income_source_list')
+    else:
+        form = IncomeSourceForm()
+
+    return render(request, 'finance/income_source_form.html', {
+        'form': form,
+        'title': 'Add Income Source'
+    })
+
+
+def income_source_update(request, pk):
+    source = get_object_or_404(IncomeSource, pk=pk)
+
+    if request.method == 'POST':
+        form = IncomeSourceForm(request.POST, instance=source)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Income source was updated successfully!')
+            return redirect('finance:income_source_list')
+    else:
+        form = IncomeSourceForm(instance=source)
+
+    return render(request, 'finance/income_source_form.html', {
+        'form': form,
+        'title': 'Edit Income Source'
+    })
+
+
+def income_source_delete(request, pk):
+    source = get_object_or_404(IncomeSource, pk=pk)
+    source.delete()
+    messages.warning(request, 'Income source was deleted successfully!')
+    return redirect('finance:income_source_list')
+
+
+# =========================
+# Expense Category Views
+# =========================
+
+def expense_category_list(request):
+    categories = ExpenseCategory.objects.all().order_by('name')
+    return render(request, 'finance/expense_category_list.html', {
+        'categories': categories,
+    })
+
+
+def expense_category_create(request):
+    if request.method == 'POST':
+        form = ExpenseCategoryForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Expense category was created successfully!')
+            return redirect('finance:expense_category_list')
+    else:
+        form = ExpenseCategoryForm()
+
+    return render(request, 'finance/expense_category_form.html', {
+        'form': form,
+        'title': 'Add Expense Category'
+    })
+
+
+def expense_category_update(request, pk):
+    category = get_object_or_404(ExpenseCategory, pk=pk)
+
+    if request.method == 'POST':
+        form = ExpenseCategoryForm(request.POST, instance=category)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Expense category was updated successfully!')
+            return redirect('finance:expense_category_list')
+    else:
+        form = ExpenseCategoryForm(instance=category)
+
+    return render(request, 'finance/expense_category_form.html', {
+        'form': form,
+        'title': 'Edit Expense Category'
+    })
+
+
+def expense_category_delete(request, pk):
+    category = get_object_or_404(ExpenseCategory, pk=pk)
+    category.delete()
+    messages.warning(request, 'Expense category was deleted successfully!')
+    return redirect('finance:expense_category_list')

@@ -1,6 +1,57 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<style>
+.message-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    width: 320px;
+}
+
+.custom-message {
+    padding: 12px 18px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+    color: #fff;
+    font-size: 14px;
+    animation: fadeIn 0.4s ease;
+}
+
+/* colors */
+.custom-message.success {
+    background: #28a745;
+}
+.custom-message.error {
+    background: #dc3545;
+}
+.custom-message.warning {
+    background: #ffc107;
+    color: #000;
+}
+.custom-message.info {
+    background: #17a2b8;
+}
+
+/* animation */
+@keyframes fadeIn {
+    from {opacity: 0; transform: translateY(-10px);}
+    to {opacity: 1; transform: translateY(0);}
+}
+</style>
+<script>
+setTimeout(() => {
+    const messages = document.querySelectorAll('.custom-message');
+    messages.forEach(msg => {
+        msg.style.opacity = "0";
+        setTimeout(() => {
+            msg.remove();
+        }, 500);
+    });
+}, 4000); // 4 seconds
+</script>
+
 <div class="page-wrapper">
     <div class="content container-fluid">
         <div class="page-header">
@@ -9,11 +60,21 @@
                     <h3 class="page-title">Expense</h3>
                 </div>
                 <div class="col-md-6 text-md-end">
+                    <a href="{% url 'finance:expense_category_list' %}" class="btn btn-primary">Expense Category List</a>
+                    <a href="{% url 'finance:expense_category_create' %}" class="btn btn-primary">Add Expense Category</a>
                     <a href="{% url 'finance:expense_create' %}" class="btn btn-primary">Add Expense</a>
                 </div>
             </div>
         </div>
-
+         {% if messages %}
+        <div class="message-container">
+            {% for message in messages %}
+                <div class="custom-message {{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
         <div class="row">
             <div class="col-md-6">
                 <div class="card">
@@ -45,13 +106,9 @@
                     <div class="col-md-2">
                         <select id="category" class="form-select">
                             <option value="">All Category</option>
-                            <option value="salary">Salary</option>
-                            <option value="rent">Rent</option>
-                            <option value="food">Food</option>
-                            <option value="transport">Transport</option>
-                            <option value="electricity">Electricity</option>
-                            <option value="internet">Internet</option>
-                            <option value="other">Other</option>
+                            {% for item in categories %}
+                                <option value="{{ item.id }}">{{ item.name }}</option>
+                            {% endfor %}
                         </select>
                     </div>
 
