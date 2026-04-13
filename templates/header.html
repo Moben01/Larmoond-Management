@@ -4,13 +4,13 @@
 <div class="header">
 
     <div class="header-left">
-        <a href="admin-dashboard.html" class="logo">
+        <a href="/" class="logo">
             <img src="{% static 'assets/img/logo.svg' %}" alt="Logo">
         </a>
-        <a href="admin-dashboard.html" class="logo collapse-logo">
+        <a href="/" class="logo collapse-logo">
             <img src="{% static 'assets/img/collapse-logo.svg' %}" alt="Logo">
         </a>
-        <a href="admin-dashboard.html" class="logo2">
+        <a href="/" class="logo2">
             <img src="{% static 'assets/img/logo2.png' %}" width="40" height="40" alt="Logo">
         </a>
     </div>
@@ -313,7 +313,7 @@
                         <a href="#"><i class="la la-dashcube"></i> <span> Dashboard</span> <span
                                 class="menu-arrow"></span></a>
                         <ul>
-                            <li><a href="admin-dashboard.html">Admin Dashboard</a></li>
+                            <li><a href="/">Admin Dashboard</a></li>
                             <li><a href="employee-dashboard.html">Employee Dashboard</a></li>
                             <li><a href="deals-dashboard.html">Deals Dashboard</a></li>
                             <li><a href="leads-dashboard.html">Leads Dashboard</a></li>
@@ -744,16 +744,26 @@
                 <li>
                     <a href="{% url 'customers:customer_list' %}"><i class="la la-user-shield"></i> <span> Customers </span></a>
                 </li>
-                <li>
-    <a href="{% url 'customers:project_list' %}"><i class="la la-chart-area"></i> <span>Projects</span></a>
-</li>
                 
-               <li>
+                <li>
+                    <a href="{% url 'customers:project_list' %}"><i class="la la-chart-area"></i> <span>Projects</span></a>
+                </li>
+                
+                <li class="submenu">
+                    <a href="#"><i class="la la-rocket"></i> <span> Finance</span> <span class="menu-arrow"></span></a>
+                    <ul>
+                        <li><a href="{% url 'finance:dashboard' %}">Dashboard</a></li>
+                        <li><a href="{% url 'finance:income_list' %}">Income</a></li>
+                        <!-- <li><a href="tasks.html">Tasks</a></li> -->
+                        <li><a href="{% url 'finance:expense_list' %}">Expense</a></li>
+                    </ul>
+                </li>
+                <!-- <li>
                     <a href="{% url 'finance:income_list' %}"><i class="la la-building"></i> <span> Income </span></a>
                 </li>
                 <li>
                     <a href="{% url 'finance:expense_list' %}"><i class="la la-cubes"></i> <span> Expense </span></a>
-                </li>
+                </li> -->
            
             </ul>
         </div>

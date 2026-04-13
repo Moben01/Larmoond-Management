@@ -1,0 +1,10 @@
+asgiref==3.11.1
+Django==6.0.4
+django-jalali-date==2.0.0
+jalali_core==1.0.0
+jdatetime==5.2.0
+psycopg==3.3.3
+psycopg2-binary==2.9.11
+setuptools==82.0.1
+sqlparse==0.5.5
+tzdata==2026.1

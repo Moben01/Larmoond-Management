@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Finance Dashboard Print</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #222;
+            background: #fff;
+        }
+
+        .print-wrapper {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .top-actions {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .top-actions button {
+            padding: 10px 18px;
+            border: none;
+            background: #111827;
+            color: #fff;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 3px solid #000;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .logo-box img {
+            width: 150px;
+            height: 150px;
+            object-fit: contain;
+        }
+
+        .company-info {
+            flex: 1;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        .company-info h1 {
+            margin: 0;
+            font-size: 26px;
+        }
+
+        .company-info h3 {
+            margin: 6px 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .company-info p {
+            margin: 3px 0;
+            font-size: 13px;
+        }
+
+        .meta-info {
+            min-width: 180px;
+            text-align: right;
+            font-size: 13px;
+        }
+
+        .report-title {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .report-title h2 {
+            margin: 0;
+            display: inline-block;
+            border: 2px solid #000;
+            padding: 8px 22px;
+            font-size: 22px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .summary-box {
+            border: 1px solid #000;
+            padding: 14px;
+            text-align: center;
+        }
+
+        .summary-box h4 {
+            margin: 0 0 8px;
+            font-size: 15px;
+        }
+
+        .summary-box p {
+            margin: 0;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .analysis-box {
+            border: 1px solid #000;
+            padding: 14px;
+        }
+
+        .analysis-box h4 {
+            margin: 0 0 10px;
+            font-size: 16px;
+        }
+
+        .analysis-box p {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .section-title {
+            margin: 25px 0 10px;
+            font-size: 18px;
+            font-weight: bold;
+            border-left: 5px solid #000;
+            padding-left: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+
+        table th,
+        table td {
+            border: 1px solid #000;
+            padding: 8px;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        table th {
+            background: #f2f2f2;
+        }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 35px;
+        }
+
+        .sign-box {
+            width: 220px;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .sign-line {
+            border-top: 1px solid #000;
+            margin-top: 45px;
+            padding-top: 5px;
+        }
+
+        @media print {
+            .top-actions {
+                display: none;
+            }
+
+            body {
+                padding: 10px;
+            }
+
+            @page {
+                size: A4 portrait;
+                margin: 12mm;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="print-wrapper">
+
+        <div class="top-actions">
+            <button onclick="window.print()">Print Dashboard</button>
+        </div>
+
+        <div class="header">
+            <div class="logo-box">
+                <img src="/static/assets/img/logo/logo.png" alt="Logo">
+            </div>
+
+            <div class="company-info">
+                <h1>Larmoond Solutions Company</h1>
+                <h3>Finance Dashboard Report</h3>
+                <p>Address: Dehbori, 3rd Street, Opposite Mirwais Hotaki High School, Kabul, Afghanistan</p>
+                <p>Phone: +93XXXXXXXXX | Email: your@email.com</p>
+            </div>
+
+            <div class="meta-info">
+                <p><strong>Date:</strong> {% now "Y-m-d" %}</p>
+                <p><strong>Type:</strong> Dashboard Print</p>
+            </div>
+        </div>
+
+        <div class="report-title">
+            <h2>Finance Dashboard Summary</h2>
+        </div>
+
+        <div class="section-title">AFN Summary</div>
+        <div class="summary-grid">
+            <div class="summary-box">
+                <h4>Total Income (AFN)</h4>
+                <p>{{ total_income_afn }}</p>
+            </div>
+            <div class="summary-box">
+                <h4>Total Expense (AFN)</h4>
+                <p>{{ total_expense_afn }}</p>
+            </div>
+            <div class="summary-box">
+                <h4>Balance (AFN)</h4>
+                <p>{{ balance_afn }}</p>
+            </div>
+        </div>
+
+        <div class="section-title">USD Summary</div>
+        <div class="summary-grid">
+            <div class="summary-box">
+                <h4>Total Income (USD)</h4>
+                <p>{{ total_income_usd }}</p>
+            </div>
+            <div class="summary-box">
+                <h4>Total Expense (USD)</h4>
+                <p>{{ total_expense_usd }}</p>
+            </div>
+            <div class="summary-box">
+                <h4>Balance (USD)</h4>
+                <p>{{ balance_usd }}</p>
+            </div>
+        </div>
+
+        <div class="analysis-grid">
+            <div class="analysis-box">
+                <h4>AFN Analysis</h4>
+                <p>{{ afn_status_text }}</p>
+            </div>
+            <div class="analysis-box">
+                <h4>USD Analysis</h4>
+                <p>{{ usd_status_text }}</p>
+            </div>
+        </div>
+
+        <div class="section-title">Latest Incomes</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Title</th>
+                    <th>Source</th>
+                    <th>Amount</th>
+                    <th>Currency</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in latest_incomes %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ item.title }}</td>
+                    <td>{{ item.source.name|default:"-" }}</td>
+                    <td>{{ item.amount }}</td>
+                    <td>{{ item.currency }}</td>
+                    <td>{{ item.date }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6">No income records found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="section-title">Latest Expenses</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Amount</th>
+                    <th>Currency</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in latest_expenses %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ item.title }}</td>
+                    <td>{{ item.category.name|default:"-" }}</td>
+                    <td>{{ item.amount }}</td>
+                    <td>{{ item.currency }}</td>
+                    <td>{{ item.date }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6">No expense records found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="footer">
+            <div class="sign-box">
+                <div class="sign-line">Prepared By</div>
+            </div>
+            <div class="sign-box">
+                <div class="sign-line">Checked By</div>
+            </div>
+            <div class="sign-box">
+                <div class="sign-line">Approved By</div>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>
