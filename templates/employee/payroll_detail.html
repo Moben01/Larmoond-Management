@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+
+
+<div class="page-wrapper">
+
+    <div class="content container-fluid">
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fa-solid fa-users me-2"></i>Employee Payroll List
+                        </h5>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Employee</th>
+                                        <th>Base</th>
+                                        <th>Leave</th>
+                                        <th>Absent</th>
+                                        <th>Deduction</th>
+                                        <th>Net Salary</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    {% for line in lines %}
+                                        <tr>
+
+                                            <!-- Employee -->
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="me-2">
+                                                        {% if line.employee.image %}
+                                                            <img src="{{ line.employee.image.url }}" class="rounded-circle" width="40" height="40">
+                                                        {% else %}
+                                                            <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width:40px;height:40px;">
+                                                                {{ line.employee.first_name|slice:":1" }}
+                                                            </div>
+                                                        {% endif %}
+                                                    </div>
+
+                                                    <div>
+                                                        <strong>
+                                                            {{ line.employee.first_name }} {{ line.employee.last_name }}
+                                                        </strong>
+                                                        <br>
+                                                        <small class="text-muted">{{ line.employee.role }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+
+                                            <!-- Base -->
+                                            <td class="fw-bold">
+                                                {{ line.base_salary|floatformat:2 }}
+                                            </td>
+
+                                            <!-- Leave -->
+                                            <td>
+                                                {{ line.total_leave_days }}
+                                                <br>
+                                                <small class="text-muted">
+                                                    Allowed: {{ line.allowed_paid_leave_days }}
+                                                </small>
+                                            </td>
+
+                                            <!-- Absent -->
+                                            <td class="text-danger fw-bold">
+                                                {{ line.total_absent_days }}
+                                            </td>
+
+                                            <!-- Deduction -->
+                                            <td class="text-danger fw-bold">
+                                                -{{ line.total_deduction|floatformat:2 }}
+                                            </td>
+
+                                            <!-- Net -->
+                                            <td class="text-success fw-bold fs-5">
+                                                {{ line.net_salary|floatformat:2 }}
+                                            </td>
+
+                                            <!-- Status -->
+                                            <td>
+                                                {% if line.is_posted_to_balance %}
+                                                    <span class="badge bg-success px-3 py-2">
+                                                        <i class="fa-solid fa-check"></i> Posted
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge bg-warning text-dark px-3 py-2">
+                                                        <i class="fa-solid fa-clock"></i> Pending
+                                                    </span>
+                                                {% endif %}
+                                            </td>
+
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+
+                                <!-- 🔥 Totals -->
+                                <tfoot class="table-light fw-bold">
+                                    <tr>
+                                        <td>Total</td>
+                                        <td>{{ totals.total_base|floatformat:2 }}</td>
+                                        <td>{{ totals.total_leave|floatformat:1 }}</td>
+                                        <td>{{ totals.total_absent|floatformat:1 }}</td>
+                                        <td class="text-danger">{{ totals.total_deduction|floatformat:2 }}</td>
+                                        <td class="text-success fs-5">{{ totals.total_net|floatformat:2 }}</td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

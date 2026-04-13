@@ -42,9 +42,9 @@
                                             <div class="staff-id">Employee ID : EMP-{{ employee.id|stringformat:"06d" }}</div>
                                             <div class="small doj text-muted">Date of Join : {{ employee.join_date|date:"jS F Y"|default:"Not specified" }}</div>
                                             <div class="staff-msg">
-                                                <a class="btn btn-custom" href="mailto:{{ employee.email }}">
-                                                    <i class="fa-regular fa-envelope"></i> Send Message
-                                                </a>
+                                            <a href="#" class="btn btn-custom" data-bs-toggle="modal" data-bs-target="#employeeLedgerModal">
+                                                <i class="fa-regular fa-envelope"></i> Employee Financial Ledger
+                                            </a>
                                             </div>
                                         </div>
                                     </div>
@@ -200,7 +200,7 @@
                     <ul class="nav nav-tabs nav-tabs-bottom" id="employeeTabs" role="tablist">
                         <li class="nav-item" role="presentation">
                             <button class="nav-link active" id="earnings-tab" data-bs-toggle="tab" data-bs-target="#emp_earnings" type="button" role="tab">
-                                <i class="fa-solid fa-receipt"></i> Earnings ({{ combined_earnings|length }})
+                                <i class="fa-solid fa-receipt"></i> Earnings ({{ ledger_records.count }})
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
@@ -208,9 +208,10 @@
                                 <i class="fa-solid fa-diagram-project"></i> Projects ({{ total_projects|default:0 }})
                             </button>
                         </li>
+
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="earnings-tab" data-bs-toggle="tab" data-bs-target="#emp_earnings" type="button" role="tab">
-                                Earnings ({{ ledger_records.count }})
+                            <button class="nav-link" id="tasks-tab" data-bs-toggle="tab" data-bs-target="#emp_tasks" type="button" role="tab">
+                                Tasks ({{ employee.assigned_project_tasks.count }})
                             </button>
                         </li>
                     </ul>
@@ -220,160 +221,216 @@
 
         <div class="tab-content" id="employeeTabContent">
             <!-- Earnings Tab (Active/First) -->
-            <div class="tab-pane fade show active" id="emp_earnings" role="tabpanel">
-                <div class="card shadow-sm">
-                    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2 bg-light">
-                        <h5 class="card-title mb-0">
-                            <i class="fa-solid fa-receipt me-2"></i>Financial Ledger History
-                        </h5>
-                    </div>
+   <div class="tab-pane fade show active" id="emp_earnings" role="tabpanel">
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2 bg-light">
+            <h5 class="card-title mb-0">
+                <i class="fa-solid fa-receipt me-2"></i>Payroll & Payment History
+            </h5>
 
-                    <div class="card-body">
-                        {% if ledger_records %}
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle">
-                                    <thead class="table-dark">
-                                        <tr>
-                                            <th>Entry Type</th>
-                                            <th>Date</th>
-                                            <th>Amount</th>
-                                            <th>Company Payable</th>
-                                            <th>Employee Payable</th>
-                                            <th>Balance Flow</th>
-                                            <th>Note</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for item in ledger_records %}
-                                            <tr>
-                                                <td>
-                                                    {% if item.entry_type == 'payroll' %}
-                                                        <span class="badge bg-primary px-3 py-2">
-                                                            <i class="fa-solid fa-file-invoice-dollar"></i> Payroll
-                                                        </span>
-                                                    {% elif item.entry_type == 'salary_payment' %}
-                                                        <span class="badge bg-success px-3 py-2">
-                                                            <i class="fa-solid fa-money-bill-wave"></i> Salary Payment
-                                                        </span>
-                                                    {% elif item.entry_type == 'adjustment_add_company_debt' %}
-                                                        <span class="badge bg-warning text-dark px-3 py-2">
-                                                            <i class="fa-solid fa-arrow-up"></i> Add Company Debt
-                                                        </span>
-                                                    {% elif item.entry_type == 'adjustment_add_employee_debt' %}
-                                                        <span class="badge bg-danger px-3 py-2">
-                                                            <i class="fa-solid fa-arrow-down"></i> Add Employee Debt
-                                                        </span>
-                                                    {% else %}
-                                                        <span class="badge bg-secondary px-3 py-2">
-                                                            {{ item.get_entry_type_display }}
-                                                        </span>
-                                                    {% endif %}
-                                                </td>
+            <a href="#" class="btn btn-custom" data-bs-toggle="modal" data-bs-target="#paymentModal">
+                <i class="fa-solid fa-money-bill-wave"></i> Payment to employee
+            </a>
+        </div>
 
-                                                <td>
-                                                    <strong>{{ item.created_at|date:"M d, Y" }}</strong>
-                                                    <br>
-                                                    <small class="text-muted">{{ item.created_at|date:"H:i" }}</small>
-                                                </td>
+        <div class="card-body">
+            {% if combined_earnings %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Type</th>
+                                <th>Date / Period</th>
+                                <th>Details</th>
+                                <th>Debit</th>
+                                <th>Credit</th>
+                                <th>Status / Note</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in combined_earnings %}
+                                <tr>
+                                    <!-- Payroll -->
+                                    {% if item.payroll_id %}
+                                        <td>
+                                            <span class="badge bg-primary px-3 py-2">
+                                                <i class="fa-solid fa-file-invoice-dollar"></i> Payroll
+                                            </span>
+                                        </td>
 
-                                                <td>
-                                                    {% if item.entry_type == 'payroll' or item.entry_type == 'adjustment_add_company_debt' %}
-                                                        <span class="text-success fw-bold fs-6">
-                                                            +{{ item.amount|floatformat:2 }}
-                                                        </span>
-                                                    {% elif item.entry_type == 'salary_payment' or item.entry_type == 'adjustment_add_employee_debt' %}
-                                                        <span class="text-danger fw-bold fs-6">
-                                                            -{{ item.amount|floatformat:2 }}
-                                                        </span>
-                                                    {% else %}
-                                                        <span class="fw-bold">{{ item.amount|floatformat:2 }}</span>
-                                                    {% endif %}
-                                                </td>
+                                        <td>
+                                            <strong>{{ item.payroll.month }}/{{ item.payroll.year }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ item.payroll.date|date:"M d, Y" }}</small>
+                                        </td>
 
-                                                <td>
-                                                    <div>
-                                                        <small class="text-muted d-block">Before</small>
-                                                        <span>{{ item.company_payable_before|floatformat:2 }}</span>
+                                        <td>
+                                            <div><strong>Base Salary:</strong> {{ item.base_salary|floatformat:2 }}</div>
+                                            <div><strong>Leave Days:</strong> {{ item.total_leave_days|floatformat:1 }}</div>
+                                            <div><strong>Absent Days:</strong> {{ item.total_absent_days|floatformat:1 }}</div>
+                                            <div><strong>Deduction:</strong> <span class="text-danger">-{{ item.total_deduction|floatformat:2 }}</span></div>
+                                        </td>
+
+                                        <td>
+                                            <span class="text-success fw-bold fs-6">
+                                                {{ item.net_salary|floatformat:2 }}
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            <span class="text-muted">-</span>
+                                        </td>
+
+                                        <td>
+                                            {% if item.is_posted_to_balance %}
+                                                <span class="badge bg-success px-3 py-2">
+                                                    <i class="fa-solid fa-check-circle"></i> Posted
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-warning text-dark px-3 py-2">
+                                                    <i class="fa-solid fa-clock"></i> Pending
+                                                </span>
+                                            {% endif %}
+                                        </td>
+
+                                        <td>
+                                            <span class="text-muted">-</span>
+                                        </td>
+                                    {% else %}
+                                        <!-- Payment -->
+                                        <td>
+                                            <span class="badge bg-success px-3 py-2">
+                                                <i class="fa-solid fa-money-bill-wave"></i> Payment
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            <strong>{{ item.date|date:"M d, Y" }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ item.created_at|date:"H:i" }}</small>
+                                        </td>
+
+                                        <td>
+                                            <div><strong>Salary Payment</strong></div>
+                                            {% if item.note %}
+                                                <small class="text-muted">{{ item.note }}</small>
+                                            {% else %}
+                                                <small class="text-muted">No note</small>
+                                            {% endif %}
+                                        </td>
+
+                                        <td>
+                                            <span class="text-muted">-</span>
+                                        </td>
+
+                                        <td>
+                                            <span class="text-danger fw-bold fs-6">
+                                                -{{ item.amount|floatformat:2 }}
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            <span class="badge bg-info text-dark px-3 py-2">
+                                                <i class="fa-solid fa-circle-check"></i> Paid
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li>
+                                                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editPaymentModal{{ item.id }}">
+                                                            <i class="fa-solid fa-pencil text-primary"></i> Edit
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#deletePaymentModal{{ item.id }}">
+                                                            <i class="fa-solid fa-trash text-danger"></i> Delete
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </td>
+
+                                        <!-- Delete Modal -->
+                                        <div class="modal fade" id="deletePaymentModal{{ item.id }}" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+                                            <div class="modal-dialog modal-dialog-centered">
+                                                <div class="modal-content">
+                                                    <div class="modal-header bg-danger text-white">
+                                                        <h5 class="modal-title">Delete Salary Payment</h5>
+                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                                     </div>
-                                                    <div>
-                                                        <small class="text-muted d-block">After</small>
-                                                        <span class="fw-bold text-success">{{ item.company_payable_after|floatformat:2 }}</span>
+                                                    <div class="modal-body">
+                                                        <div class="text-center">
+                                                            <i class="fa-solid fa-exclamation-triangle text-danger" style="font-size: 50px;"></i>
+                                                            <h5 class="mt-3">Are you sure?</h5>
+                                                            <p>You are about to delete this salary payment record.</p>
+                                                            <div class="alert alert-warning">
+                                                                <strong>Amount:</strong> {{ item.amount|floatformat:2 }}<br>
+                                                                <strong>Date:</strong> {{ item.date|date:"M d, Y" }}<br>
+                                                                {% if item.note %}
+                                                                    <strong>Note:</strong> {{ item.note }}
+                                                                {% endif %}
+                                                            </div>
+                                                            <p class="text-danger mb-0">⚠️ This action will restore the previous balance.</p>
+                                                        </div>
                                                     </div>
-                                                </td>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                        <form method="POST" action="{% url 'employee:employee_salary_payment_delete' item.id %}" style="display: inline;">
+                                                            {% csrf_token %}
+                                                            <button type="submit" class="btn btn-danger">
+                                                                <i class="fa-solid fa-trash"></i> Delete Payment
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </tr>
+                            {% endfor %}
+                        </tbody>
 
-                                                <td>
-                                                    <div>
-                                                        <small class="text-muted d-block">Before</small>
-                                                        <span>{{ item.employee_payable_before|floatformat:2 }}</span>
-                                                    </div>
-                                                    <div>
-                                                        <small class="text-muted d-block">After</small>
-                                                        <span class="fw-bold text-danger">{{ item.employee_payable_after|floatformat:2 }}</span>
-                                                    </div>
-                                                </td>
-
-                                                <td>
-                                                    <div class="d-flex flex-column gap-1">
-                                                        <small class="text-muted">
-                                                            Company:
-                                                            <strong>{{ item.company_payable_before|floatformat:2 }}</strong>
-                                                            →
-                                                            <strong class="text-success">{{ item.company_payable_after|floatformat:2 }}</strong>
-                                                        </small>
-                                                        <small class="text-muted">
-                                                            Employee:
-                                                            <strong>{{ item.employee_payable_before|floatformat:2 }}</strong>
-                                                            →
-                                                            <strong class="text-danger">{{ item.employee_payable_after|floatformat:2 }}</strong>
-                                                        </small>
-                                                    </div>
-                                                </td>
-
-                                                <td>
-                                                    {% if item.note %}
-                                                        <span>{{ item.note }}</span>
-                                                    {% else %}
-                                                        <span class="text-muted">No note</span>
-                                                    {% endif %}
-                                                </td>
-                                            </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                    <tfoot class="table-light">
-                                        <tr class="fw-bold">
-                                            <td colspan="3">Current Company Payable</td>
-                                            <td class="text-success">{{ employee_balance.company_payable_to_employee|floatformat:2 }}</td>
-                                            <td colspan="3"></td>
-                                        </tr>
-                                        <tr class="fw-bold">
-                                            <td colspan="3">Current Employee Payable</td>
-                                            <td class="text-danger">{{ employee_balance.employee_payable_to_company|floatformat:2 }}</td>
-                                            <td colspan="3"></td>
-                                        </tr>
-                                        <tr class="fw-bold">
-                                            <td colspan="3">Net Balance</td>
-                                            <td colspan="4">
-                                                {% if employee_balance.net_balance > 0 %}
-                                                    <span class="text-success">{{ employee_balance.net_balance|floatformat:2 }} (Company owes employee)</span>
-                                                {% elif employee_balance.net_balance < 0 %}
-                                                    <span class="text-danger">{{ employee_balance.net_balance|floatformat:2 }} (Employee owes company)</span>
-                                                {% else %}
-                                                    <span class="text-muted">0.00 (Settled)</span>
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
-                        {% else %}
-                            <div class="alert alert-info text-center mb-0">
-                                <i class="fa-solid fa-info-circle"></i> No financial ledger records found for this employee.
-                            </div>
-                        {% endif %}
-                    </div>
+                        <tfoot class="table-light">
+                            <tr class="fw-bold">
+                                <td colspan="3">Current Company Payable</td>
+                                <td class="text-success">{{ employee_balance.company_payable_to_employee|floatformat:2 }}</td>
+                                <td colspan="3"></td>
+                            </tr>
+                            <tr class="fw-bold">
+                                <td colspan="3">Current Employee Payable</td>
+                                <td class="text-danger">{{ employee_balance.employee_payable_to_company|floatformat:2 }}</td>
+                                <td colspan="3"></td>
+                            </tr>
+                            <tr class="fw-bold">
+                                <td colspan="3">Net Balance</td>
+                                <td colspan="4">
+                                    {% if employee_balance.net_balance > 0 %}
+                                        <span class="text-success">{{ employee_balance.net_balance|floatformat:2 }} (Company owes employee)</span>
+                                    {% elif employee_balance.net_balance < 0 %}
+                                        <span class="text-danger">{{ employee_balance.net_balance|floatformat:2 }} (Employee owes company)</span>
+                                    {% else %}
+                                        <span class="text-muted">0.00 (Settled)</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
                 </div>
-            </div>
-            
+            {% else %}
+                <div class="alert alert-info text-center mb-0">
+                    <i class="fa-solid fa-info-circle"></i> No payroll or payment records found for this employee.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
             <!-- Projects Tab -->
             <div class="tab-pane fade" id="emp_projects" role="tabpanel">
                 <div class="row">
@@ -559,6 +616,165 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="employeeLedgerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title">
+                    <i class="fa-solid fa-book me-2"></i>Employee Financial Ledger
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                {% if full_ledger_records %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Entry Type</th>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Company Payable</th>
+                                    <th>Employee Payable</th>
+                                    <th>Balance Flow</th>
+                                    <th>Note</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in full_ledger_records %}
+                                    <tr>
+                                        <td>
+                                            {% if item.entry_type == 'payroll' %}
+                                                <span class="badge bg-primary px-3 py-2">
+                                                    <i class="fa-solid fa-file-invoice-dollar"></i> Payroll
+                                                </span>
+                                            {% elif item.entry_type == 'salary_payment' %}
+                                                <span class="badge bg-success px-3 py-2">
+                                                    <i class="fa-solid fa-money-bill-wave"></i> Salary Payment
+                                                </span>
+                                            {% elif item.entry_type == 'adjustment_add_company_debt' %}
+                                                <span class="badge bg-warning text-dark px-3 py-2">
+                                                    <i class="fa-solid fa-arrow-up"></i> Add Company Debt
+                                                </span>
+                                            {% elif item.entry_type == 'adjustment_add_employee_debt' %}
+                                                <span class="badge bg-danger px-3 py-2">
+                                                    <i class="fa-solid fa-arrow-down"></i> Add Employee Debt
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-secondary px-3 py-2">
+                                                    {{ item.get_entry_type_display }}
+                                                </span>
+                                            {% endif %}
+                                        </td>
+
+                                        <td>
+                                            <strong>{{ item.created_at|date:"M d, Y" }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ item.created_at|date:"H:i" }}</small>
+                                        </td>
+
+                                        <td>
+                                            {% if item.entry_type == 'payroll' or item.entry_type == 'adjustment_add_company_debt' %}
+                                                <span class="text-success fw-bold fs-6">
+                                                    +{{ item.amount|floatformat:2 }}
+                                                </span>
+                                            {% elif item.entry_type == 'salary_payment' or item.entry_type == 'adjustment_add_employee_debt' %}
+                                                <span class="text-danger fw-bold fs-6">
+                                                    -{{ item.amount|floatformat:2 }}
+                                                </span>
+                                            {% else %}
+                                                <span class="fw-bold">{{ item.amount|floatformat:2 }}</span>
+                                            {% endif %}
+                                        </td>
+
+                                        <td>
+                                            <div>
+                                                <small class="text-muted d-block">Before</small>
+                                                <span>{{ item.company_payable_before|floatformat:2 }}</span>
+                                            </div>
+                                            <div>
+                                                <small class="text-muted d-block">After</small>
+                                                <span class="fw-bold text-success">{{ item.company_payable_after|floatformat:2 }}</span>
+                                            </div>
+                                        </td>
+
+                                        <td>
+                                            <div>
+                                                <small class="text-muted d-block">Before</small>
+                                                <span>{{ item.employee_payable_before|floatformat:2 }}</span>
+                                            </div>
+                                            <div>
+                                                <small class="text-muted d-block">After</small>
+                                                <span class="fw-bold text-danger">{{ item.employee_payable_after|floatformat:2 }}</span>
+                                            </div>
+                                        </td>
+
+                                        <td>
+                                            <div class="d-flex flex-column gap-1">
+                                                <small class="text-muted">
+                                                    Company:
+                                                    <strong>{{ item.company_payable_before|floatformat:2 }}</strong>
+                                                    →
+                                                    <strong class="text-success">{{ item.company_payable_after|floatformat:2 }}</strong>
+                                                </small>
+                                                <small class="text-muted">
+                                                    Employee:
+                                                    <strong>{{ item.employee_payable_before|floatformat:2 }}</strong>
+                                                    →
+                                                    <strong class="text-danger">{{ item.employee_payable_after|floatformat:2 }}</strong>
+                                                </small>
+                                            </div>
+                                        </td>
+
+                                        <td>
+                                            {% if item.note %}
+                                                <span>{{ item.note }}</span>
+                                            {% else %}
+                                                <span class="text-muted">No note</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+
+                            <tfoot class="table-light">
+                                <tr class="fw-bold">
+                                    <td colspan="3">Current Company Payable</td>
+                                    <td class="text-success">{{ employee_balance.company_payable_to_employee|floatformat:2 }}</td>
+                                    <td colspan="3"></td>
+                                </tr>
+                                <tr class="fw-bold">
+                                    <td colspan="3">Current Employee Payable</td>
+                                    <td class="text-danger">{{ employee_balance.employee_payable_to_company|floatformat:2 }}</td>
+                                    <td colspan="3"></td>
+                                </tr>
+                                <tr class="fw-bold">
+                                    <td colspan="3">Net Balance</td>
+                                    <td colspan="4">
+                                        {% if employee_balance.net_balance > 0 %}
+                                            <span class="text-success">{{ employee_balance.net_balance|floatformat:2 }} (Company owes employee)</span>
+                                        {% elif employee_balance.net_balance < 0 %}
+                                            <span class="text-danger">{{ employee_balance.net_balance|floatformat:2 }} (Employee owes company)</span>
+                                        {% else %}
+                                            <span class="text-muted">0.00 (Settled)</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info text-center mb-0">
+                        No financial ledger records found for this employee.
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>

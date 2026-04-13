@@ -13,8 +13,10 @@ urlpatterns = [
     path('leave-absence/<int:record_id>/delete/', views.leave_absence_delete, name='leave_absence_delete'),
 
     path('payroll/create/', views.create_monthly_payroll, name='create_monthly_payroll'),
+    path('payroll/<int:payroll_id>/', views.payroll_detail, name='payroll_detail'),
     path('delete_payroll/<int:payroll_id>/', views.delete_monthly_payroll, name='delete_monthly_payroll'),
 
     path('employee/<int:employee_id>/salary-payment/create/', views.employee_salary_payment_create, name='employee_salary_payment_create'),
-    path('salary-payment/<int:payment_id>/delete/', views.employee_salary_payment_delete, name='employee_salary_payment_delete'),
+    path('salary-payment/<int:payment_id>/delete/',views.employee_salary_payment_delete,name='employee_salary_payment_delete'
+),
 ]
