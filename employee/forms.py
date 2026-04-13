@@ -64,3 +64,14 @@ class EmployeePayrollCreateForm(forms.Form):
         required=False,
         widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3})
     )
+
+
+class EmployeeSalaryPaymentForm(forms.ModelForm):
+    class Meta:
+        model = EmployeeSalaryPayment
+        fields = ['date', 'amount', 'note']
+        widgets = {
+            'date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'note': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }

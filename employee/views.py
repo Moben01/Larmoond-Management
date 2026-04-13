@@ -5,6 +5,8 @@ from .forms import *
 from django.contrib.auth.decorators import login_required
 from home.models import *
 from django.db import transaction
+from itertools import chain
+from django.db.models import Sum
 
 
 def employee_create(request):
@@ -57,28 +59,65 @@ def delete_employee(request, employee_id):
 
 
 def employee_detail(request, employee_id):
-    # Get the employee object
     employee = get_object_or_404(Employee, id=employee_id)
-    
-    # Get projects where this employee is a member
-    assigned_projects = employee.assigned_projects.all()  # Using the related_name from Project model
-    
 
-    # Combine all projects (unique)
-    all_projects = assigned_projects
-    all_projects = all_projects.distinct().order_by('-created_at')
-    
-    # Calculate statistics
+    employee_balance, _ = EmployeeBalance.objects.get_or_create(employee=employee)
+
+    assigned_projects = employee.assigned_projects.all()
+    all_projects = assigned_projects.distinct().order_by('-created_at')
+
     total_projects = all_projects.count()
     active_projects = all_projects.filter(status='in_progress').count()
     completed_projects = all_projects.filter(status='completed').count()
-    
+
+    payroll_records = EmployeePayrollLine.objects.filter(
+        employee=employee
+    ).select_related('payroll').order_by('-payroll__date', '-id')
+
+    payment_records = EmployeeSalaryPayment.objects.filter(
+        employee=employee
+    ).order_by('-date', '-id')
+
+    # ✅ full ledger for modal
+    full_ledger_records = EmployeeBalanceLedger.objects.filter(
+        employee=employee
+    ).order_by('-created_at', '-id')
+
+    payment_form = EmployeeSalaryPaymentForm()
+
+    combined_earnings = sorted(
+        chain(payroll_records, payment_records),
+        key=lambda x: x.created_at,
+        reverse=True
+    )
+
+    chart_months = []
+    chart_net_salaries = []
+    chart_base_salaries = []
+    chart_deductions = []
+
+    for record in payroll_records.order_by('payroll__date', 'id'):
+        chart_months.append(f"{record.payroll.month}/{record.payroll.year}")
+        chart_net_salaries.append(float(record.net_salary))
+        chart_base_salaries.append(float(record.base_salary))
+        chart_deductions.append(float(record.total_deduction))
+
     context = {
         'employee': employee,
         'projects': all_projects,
         'total_projects': total_projects,
         'active_projects': active_projects,
         'completed_projects': completed_projects,
+        'employee_balance': employee_balance,
+        'payroll_records': payroll_records,
+        'payment_records': payment_records,
+        'payment_form': payment_form,
+        'combined_earnings': combined_earnings,
+        'full_ledger_records': full_ledger_records,   # ✅ مهم
+        'chart_months': chart_months,
+        'chart_net_salaries': chart_net_salaries,
+        'chart_base_salaries': chart_base_salaries,
+        'chart_deductions': chart_deductions,
     }
     return render(request, 'employee/employee_detail.html', context)
 
@@ -225,29 +264,36 @@ def post_payroll_line_to_balance(line):
     if not line:
         return
 
-    if line.is_posted_to_balance:
-        return
-
     balance, _ = EmployeeBalance.objects.get_or_create(employee=line.employee)
 
     company_before = Decimal(str(balance.company_payable_to_employee or 0))
     employee_before = Decimal(str(balance.employee_payable_to_company or 0))
 
-    balance.company_payable_to_employee = company_before + Decimal(str(line.net_salary))
+    old_posted_amount = Decimal(str(line.posted_balance_amount or 0))
+    new_amount = Decimal(str(line.net_salary or 0))
+
+    # فقط تفاوت را به balance اعمال کن
+    difference = new_amount - old_posted_amount
+
+    if difference == 0:
+        return
+
+    balance.company_payable_to_employee = company_before + difference
     balance.save()
 
     EmployeeBalanceLedger.objects.create(
         employee=line.employee,
         entry_type='payroll',
-        amount=line.net_salary,
+        amount=difference,
         company_payable_before=company_before,
         company_payable_after=balance.company_payable_to_employee,
         employee_payable_before=employee_before,
         employee_payable_after=balance.employee_payable_to_company,
-        note=f'Payroll posted for {line.payroll.year}-{line.payroll.month}'
+        note=f'Payroll synced for {line.payroll.year}-{line.payroll.month}'
     )
 
     line.is_posted_to_balance = True
+    line.posted_balance_amount = new_amount
     line.save()
 
 
@@ -303,3 +349,123 @@ def create_monthly_payroll(request):
         'form': form,
         'payrolls': payrolls,
     })
+
+
+def payroll_detail(request, payroll_id):
+    payroll = get_object_or_404(
+        EmployeePayroll.objects.prefetch_related('lines__employee'),
+        id=payroll_id
+    )
+
+    lines = payroll.lines.all().order_by('employee__first_name')
+
+    # totals
+    totals = lines.aggregate(
+        total_base=Sum('base_salary'),
+        total_leave=Sum('total_leave_days'),
+        total_absent=Sum('total_absent_days'),
+        total_deduction=Sum('total_deduction'),
+        total_net=Sum('net_salary'),
+    )
+
+    context = {
+        'payroll': payroll,
+        'lines': lines,
+        'totals': totals,
+    }
+    return render(request, 'employee/payroll_detail.html', context)
+
+
+def delete_monthly_payroll(request, payroll_id):
+    payroll = get_object_or_404(EmployeePayroll, id=payroll_id)
+
+    if request.method == 'POST':
+        payroll.delete()
+        messages.success(request, "Payroll deleted successfully 🗑️")
+    else:
+        messages.warning(request, "Invalid delete request ⚠️")
+
+    return redirect('employee:create_monthly_payroll')
+
+
+def apply_salary_payment(employee, amount, payment=None):
+    amount = Decimal(str(amount))
+    balance, _ = EmployeeBalance.objects.get_or_create(employee=employee)
+
+    company_before = Decimal(str(balance.company_payable_to_employee or 0))
+    employee_before = Decimal(str(balance.employee_payable_to_company or 0))
+
+    if balance.company_payable_to_employee >= amount:
+        balance.company_payable_to_employee -= amount
+    else:
+        remaining = amount - balance.company_payable_to_employee
+        balance.company_payable_to_employee = Decimal('0')
+        balance.employee_payable_to_company += remaining
+
+    balance.save()
+
+    EmployeeBalanceLedger.objects.create(
+        employee=employee,
+        entry_type='salary_payment',
+        salary_payment=payment,
+        amount=amount,
+        company_payable_before=company_before,
+        company_payable_after=balance.company_payable_to_employee,
+        employee_payable_before=employee_before,
+        employee_payable_after=balance.employee_payable_to_company,
+        note=f'Salary payment recorded'
+    )
+
+
+@transaction.atomic
+def employee_salary_payment_create(request, employee_id):
+    employee = get_object_or_404(Employee, id=employee_id)
+
+    if request.method == 'POST':
+        form = EmployeeSalaryPaymentForm(request.POST)
+        if form.is_valid():
+            payment = form.save(commit=False)
+            payment.employee = employee
+            payment.save()
+
+            apply_salary_payment(employee, payment.amount, payment=payment)
+
+            messages.success(request, "Salary payment recorded successfully ✅")
+        else:
+            messages.error(request, "Failed to save payment ❌")
+
+    return redirect('employee:employee_detail', employee_id=employee.id)
+
+
+@transaction.atomic
+def employee_salary_payment_delete(request, payment_id):
+    payment = get_object_or_404(EmployeeSalaryPayment, id=payment_id)
+    employee = payment.employee
+
+    if request.method == 'POST':
+        balance, _ = EmployeeBalance.objects.get_or_create(employee=employee)
+
+        company_before = Decimal(str(balance.company_payable_to_employee or 0))
+        employee_before = Decimal(str(balance.employee_payable_to_company or 0))
+
+        # برعکسِ payment عمل می‌کنیم
+        balance.company_payable_to_employee = company_before + Decimal(str(payment.amount))
+        balance.save()
+
+        EmployeeBalanceLedger.objects.create(
+            employee=employee,
+            entry_type='adjustment_add_company_debt',
+            amount=payment.amount,
+            company_payable_before=company_before,
+            company_payable_after=balance.company_payable_to_employee,
+            employee_payable_before=employee_before,
+            employee_payable_after=balance.employee_payable_to_company,
+            note=f'Reversed deleted payment #{payment.id}'
+        )
+
+        payment.delete()
+        messages.success(request, "Payment deleted successfully 🗑️")
+    else:
+        messages.warning(request, "Invalid delete request ⚠️")
+
+    return redirect('employee:employee_detail', employee_id=employee.id)

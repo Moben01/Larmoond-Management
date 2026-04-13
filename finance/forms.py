@@ -3,9 +3,6 @@ from .models import *
 from django.core.exceptions import ValidationError
 from django import forms
 from .models import Income, Expense
-from jalali_date.fields import JalaliDateField
-from jalali_date.widgets import AdminJalaliDateWidget
-
 from django import forms
 from .models import Income, Expense, IncomeSource, ExpenseCategory
 

@@ -1,508 +1,123 @@
 {% extends 'base.html' %}
-{% block content %}
 {% load static %}
 
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
 <div class="page-wrapper">
-    <div class="content container-fluid pb-0">
+    <div class="content container-fluid">
         <div class="page-header">
-            <div class="row">
-                <div class="col-sm-12">
-                    <h3 class="page-title">Profile</h3>
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h3 class="page-title">{{ title }}</h3>
                     <ul class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="{% url 'admin-dashboard' %}">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{% url 'employees:employee_list' %}">Employees</a></li>
-                        <li class="breadcrumb-item active">{{ employee.full_name }}'s Profile</li>
+                        <li class="breadcrumb-item"><a href="{% url 'customers:customer_list' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'customers:project_list' %}">Projects</a></li>
+                        <li class="breadcrumb-item active">{{ title }}</li>
                     </ul>
                 </div>
             </div>
         </div>
 
-        <!-- Profile Header Card -->
-        <div class="card mb-0">
+        <div class="card">
             <div class="card-body">
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="profile-view">
-                            <div class="profile-img-wrap">
-                                <div class="profile-img">
-                                    {% if employee.image %}
-                                        <a href="#"><img src="{{ employee.image.url }}" alt="{{ employee.full_name }}"></a>
-                                    {% else %}
-                                        <a href="#"><img src="https://ui-avatars.com/api/?name={{ employee.full_name|urlencode }}&background=random&size=120" alt="{{ employee.full_name }}"></a>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="profile-basic">
-                                <div class="row">
-                                    <div class="col-md-5">
-                                        <div class="profile-info-left">
-                                            <h3 class="user-name m-t-0 mb-0">{{ employee.full_name }}</h3>
-                                            <h6 class="text-muted">{{ employee.get_role_display }}</h6>
-                                            <small class="text-muted">{{ employee.role }}</small>
-                                            <div class="staff-id">Employee ID : EMP-{{ employee.id|stringformat:"06d" }}</div>
-                                            <div class="small doj text-muted">Date of Join : {{ employee.join_date|date:"jS F Y"|default:"Not specified" }}</div>
-                                            <div class="staff-msg">
-                                                <a class="btn btn-custom" href="mailto:{{ employee.email }}">
-                                                    <i class="fa-regular fa-envelope"></i> Send Message
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-7">
-                                        <ul class="personal-info">
-                                            <li>
-                                                <div class="title">Phone:</div>
-                                                <div class="text">
-                                                    <a href="tel:{{ employee.phone }}">{{ employee.phone|default:"Not provided" }}</a>
-                                                </div>
-                                            </li>
-                                            <li>
-                                                <div class="title">Email:</div>
-                                                <div class="text">
-                                                    <a href="mailto:{{ employee.email }}">
-                                                        {{ employee.email|default:"Not provided" }}
-                                                    </a>
-                                                </div>
-                                            </li>
-                                            <li>
-                                                <div class="title">Birthday:</div>
-                                                <div class="text">{{ employee.birthday|date:"jS F"|default:"Not specified" }}</div>
-                                            </li>
-                                            <li>
-                                                <div class="title">Address:</div>
-                                                <div class="text">{{ employee.address|default:"Not provided" }}</div>
-                                            </li>
-                                            <li>
-                                                <div class="title">Gender:</div>
-                                                <div class="text">{{ employee.get_gender_display|default:"Not specified" }}</div>
-                                            </li>
-                                            <li>
-                                                <div class="title">Salary:</div>
-                                                <div class="text">${{ employee.salary|floatformat:2|default:"0.00" }}</div>
-                                            </li>
-                                            <li>
-                                                <div class="title">Status:</div>
-                                                <div class="text">
-                                                    {% if employee.is_active %}
-                                                        <span class="badge bg-success">Active</span>
-                                                    {% else %}
-                                                        <span class="badge bg-danger">Inactive</span>
-                                                    {% endif %}
-                                                </div>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="pro-edit">
-                                <a data-bs-target="#profile_info" data-bs-toggle="modal" class="edit-icon" href="#">
-                                    <i class="fa-solid fa-pencil"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Statistics Cards -->
-        <div class="row mt-3">
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body text-center">
-                        <h3 class="mb-0">{{ total_projects|default:0 }}</h3>
-                        <p class="text-muted mb-0">Total Projects</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body text-center">
-                        <h3 class="mb-0">{{ active_projects|default:0 }}</h3>
-                        <p class="text-muted mb-0">Active Projects</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body text-center">
-                        <h3 class="mb-0">{{ completed_projects|default:0 }}</h3>
-                        <p class="text-muted mb-0">Completed Projects</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tabs -->
-        <div class="card tab-box">
-            <div class="row user-tabs">
-                <div class="col-lg-12 col-md-12 col-sm-12 line-tabs">
-                    <ul class="nav nav-tabs nav-tabs-bottom" id="employeeTabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="projects-tab" data-bs-toggle="tab" data-bs-target="#emp_projects" type="button" role="tab">
-                                Projects ({{ total_projects|default:0 }})
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="tasks-tab" data-bs-toggle="tab" data-bs-target="#emp_tasks" type="button" role="tab">
-                                Tasks ({{ employee.assigned_project_tasks.count }})
-                            </button>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <div class="tab-content" id="employeeTabContent">
-            <!-- Projects Tab -->
-            <div class="tab-pane fade show active" id="emp_projects" role="tabpanel">
-                <div class="row">
-                    {% for project in projects %}
-                        <div class="col-lg-4 col-sm-6 col-md-4 col-xl-3 d-flex">
-                            <div class="card w-100">
-                                <div class="card-body">
-                                    <div class="dropdown profile-action">
-                                        <a aria-expanded="false" data-bs-toggle="dropdown" class="action-icon dropdown-toggle" href="#">
-                                            <i class="material-icons">more_vert</i>
-                                        </a>
-                                        <div class="dropdown-menu dropdown-menu-right">
-                                            <a href="{% url 'customers:project_detail' project.id %}" class="dropdown-item">
-                                                <i class="fa-solid fa-eye m-r-5"></i> View Details
-                                            </a>
-                                            {% if project.project_manager == employee %}
-                                                <a href="{% url 'customers:project_edit' project.id %}" class="dropdown-item">
-                                                    <i class="fa-solid fa-pencil m-r-5"></i> Edit
-                                                </a>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                    
-                                    <h4 class="project-title">
-                                        <a href="{% url 'customers:project_detail' project.id %}">{{ project.project_name }}</a>
-                                    </h4>
-                                    
-                                    <small class="block text-ellipsis m-b-15">
-                                        <span class="text-xs">{{ project.project_id }}</span>
-                                    </small>
-                                    
-                                    <p class="text-muted">{{ project.description|truncatechars:80|default:"No description" }}</p>
-                                    
-                                    <div class="pro-deadline m-b-15">
-                                        <div class="sub-title">Deadline:</div>
-                                        <div class="text-muted">
-                                            {{ project.end_date|date:"M d, Y"|default:"Not set" }}
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="project-members m-b-15">
-                                        <div>Project Manager:</div>
-                                        <ul class="team-members">
-                                            <li>
-                                                <a href="#" data-bs-toggle="tooltip" title="{{ project.project_manager.full_name|default:'Not assigned' }}">
-                                                    {% if project.project_manager %}
-                                                        <img src="{% if project.project_manager.image %}{{ project.project_manager.image.url }}{% else %}https://ui-avatars.com/api/?name={{ project.project_manager.full_name|urlencode }}&background=random{% endif %}" alt="Manager">
-                                                    {% else %}
-                                                        <img src="https://ui-avatars.com/api/?name=Not+Assigned&background=random" alt="Not Assigned">
-                                                    {% endif %}
-                                                </a>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                    
-                                    <div class="project-members m-b-15">
-                                        <div>Team Members:</div>
-                                        <ul class="team-members">
-                                            {% for member in project.project_members.all|slice:":4" %}
-                                                <li>
-                                                    <a href="#" data-bs-toggle="tooltip" title="{{ member.full_name }}">
-                                                        <img src="{% if member.image %}{{ member.image.url }}{% else %}https://ui-avatars.com/api/?name={{ member.full_name|urlencode }}&background=random{% endif %}" alt="{{ member.full_name }}">
-                                                    </a>
-                                                </li>
-                                            {% empty %}
-                                                <li><span class="text-muted">No team members</span></li>
-                                            {% endfor %}
-                                            
-                                            {% if project.project_members.count > 4 %}
-                                                <li class="dropdown avatar-dropdown">
-                                                    <a href="#" class="all-users dropdown-toggle" data-bs-toggle="dropdown">
-                                                        +{{ project.project_members.count|add:"-4" }}
-                                                    </a>
-                                                    <div class="dropdown-menu dropdown-menu-right">
-                                                        <div class="avatar-group p-2">
-                                                            {% for member in project.project_members.all %}
-                                                                <a class="avatar avatar-xs" href="#" title="{{ member.full_name }}">
-                                                                    <img src="{% if member.image %}{{ member.image.url }}{% else %}https://ui-avatars.com/api/?name={{ member.full_name|urlencode }}&background=random{% endif %}" alt="{{ member.full_name }}">
-                                                                </a>
-                                                            {% endfor %}
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                            {% endif %}
-                                        </ul>
-                                    </div>
-                                    
-                                    <p class="m-b-5">
-                                        Status: 
-                                        <span class="badge 
-                                            {% if project.status == 'completed' %}bg-success
-                                            {% elif project.status == 'in_progress' %}bg-info
-                                            {% elif project.status == 'on_hold' %}bg-warning
-                                            {% elif project.status == 'cancelled' %}bg-danger
-                                            {% else %}bg-secondary{% endif %}">
-                                            {{ project.get_status_display }}
-                                        </span>
-                                    </p>
-                                    
-                                    <p class="m-b-5">
-                                        Progress <span class="text-success float-end">{{ project.progress_percentage }}%</span>
-                                    </p>
-                                    <div class="progress progress-xs mb-0">
-                                        <div class="progress-bar bg-success" role="progressbar" 
-                                             style="width: {{ project.progress_percentage }}%" 
-                                             data-bs-toggle="tooltip" title="{{ project.progress_percentage }}%">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    {% empty %}
-                        <div class="col-12">
-                            <div class="alert alert-info text-center">
-                                <i class="fa-solid fa-info-circle"></i> No projects assigned yet.
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <!-- Tasks Tab -->
-            <div class="tab-pane fade" id="emp_tasks" role="tabpanel">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Task Title</th>
-                                        <th>Project</th>
-                                        <th>Priority</th>
-                                        <th>Status</th>
-                                        <th>Deadline</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for task in employee.assigned_project_tasks.all %}
-                                        <tr>
-                                            <td>
-                                                <strong>{{ task.title }}</strong><br>
-                                                <small class="text-muted">{{ task.description|truncatechars:50 }}</small>
-                                            </td>
-                                            <td>
-                                                <a href="{% url 'customers:project_detail' task.project.id %}">
-                                                    {{ task.project.project_name }}
-                                                </a>
-                                            </td>
-                                            <td>
-                                                <span class="badge 
-                                                    {% if task.priority == 'high' or task.priority == 'urgent' %}bg-danger
-                                                    {% elif task.priority == 'medium' %}bg-warning text-dark
-                                                    {% else %}bg-success{% endif %}">
-                                                    {{ task.get_priority_display }}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span class="badge 
-                                                    {% if task.status == 'completed' %}bg-success
-                                                    {% elif task.status == 'in_progress' %}bg-info
-                                                    {% elif task.status == 'cancelled' %}bg-danger
-                                                    {% else %}bg-secondary{% endif %}">
-                                                    {{ task.get_status_display }}
-                                                </span>
-                                            </td>
-                                            <td>{{ task.deadline|date:"M d, Y"|default:"No deadline" }}</td>
-                                            <td>
-                                                <a href="{% url 'projects:task_update' task.id %}" class="btn btn-sm btn-primary">
-                                                    <i class="fa-regular fa-pen-to-square"></i> Update
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    {% empty %}
-                                        <tr>
-                                            <td colspan="6" class="text-center text-muted">
-                                                No tasks assigned yet.
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Edit Profile Modal -->
-<div class="modal fade" id="profile_info" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Edit Profile</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form method="POST" action="{% url 'employees:employee_edit' employee.id %}" enctype="multipart/form-data">
-                {% csrf_token %}
-                <div class="modal-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
                     <div class="row">
                         <div class="col-md-6">
+                            <h5>Basic Information</h5>
+                            <hr>
                             <div class="mb-3">
-                                <label>First Name</label>
-                                <input type="text" name="first_name" value="{{ employee.first_name }}" class="form-control">
+                                <label>Project Name *</label>
+                                {{ form.project_name }}
+                            </div>
+                            <div class="mb-3">
+                                <label>Customer *</label>
+                                {{ form.customer }}
+                            </div>
+                            <div class="mb-3">
+                                <label>Description</label>
+                                {{ form.description }}
                             </div>
                         </div>
+                        
                         <div class="col-md-6">
+                            <h5>Financial Information</h5>
+                            <hr>
                             <div class="mb-3">
-                                <label>Last Name</label>
-                                <input type="text" name="last_name" value="{{ employee.last_name }}" class="form-control">
+                                <label>Total Price *</label>
+                                {{ form.total_price }}
+                            </div>
+                            <div class="mb-3">
+                                <label>Paid Amount *</label>
+                                {{ form.paid_amount }}
+                            </div>
+                            <div class="mb-3">
+                                <label>Remaining Amount</label>
+                                <input type="text" class="form-control" id="remaining_amount" readonly>
                             </div>
                         </div>
+                        
                         <div class="col-md-6">
+                            <h5>Timeline</h5>
+                            <hr>
                             <div class="mb-3">
-                                <label>Email</label>
-                                <input type="email" name="email" value="{{ employee.email }}" class="form-control">
+                                <label>Start Date *</label>
+                                {{ form.start_date }}
+                            </div>
+                            <div class="mb-3">
+                                <label>End Date</label>
+                                {{ form.end_date }}
                             </div>
                         </div>
+                        
                         <div class="col-md-6">
+                            <h5>Status & Progress</h5>
+                            <hr>
                             <div class="mb-3">
-                                <label>Phone</label>
-                                <input type="text" name="phone" value="{{ employee.phone }}" class="form-control">
+                                <label>Status</label>
+                                {{ form.status }}
+                            </div>
+                            <div class="mb-3">
+                                <label>Priority</label>
+                                {{ form.priority }}
+                            </div>
+                            <div class="mb-3">
+                                <label>Progress (%)</label>
+                                {{ form.progress_percentage }}
                             </div>
                         </div>
-                        <div class="col-md-12">
+                        
+                        <div class="col-12">
+                            <h5>Additional Notes</h5>
+                            <hr>
                             <div class="mb-3">
-                                <label>Address</label>
-                                <textarea name="address" class="form-control" rows="2">{{ employee.address }}</textarea>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label>Gender</label>
-                                <select name="gender" class="form-select">
-                                    <option value="male" {% if employee.gender == 'male' %}selected{% endif %}>Male</option>
-                                    <option value="female" {% if employee.gender == 'female' %}selected{% endif %}>Female</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label>Role</label>
-                                <select name="role" class="form-select">
-                                    <option value="developer" {% if employee.role == 'developer' %}selected{% endif %}>Developer</option>
-                                    <option value="designer" {% if employee.role == 'designer' %}selected{% endif %}>Designer</option>
-                                    <option value="manager" {% if employee.role == 'manager' %}selected{% endif %}>Manager</option>
-                                    <option value="qa" {% if employee.role == 'qa' %}selected{% endif %}>QA</option>
-                                    <option value="hr" {% if employee.role == 'hr' %}selected{% endif %}>HR</option>
-                                    <option value="other" {% if employee.role == 'other' %}selected{% endif %}>Other</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label>Salary</label>
-                                <input type="number" name="salary" value="{{ employee.salary }}" class="form-control">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label>Join Date</label>
-                                <input type="date" name="join_date" value="{{ employee.join_date|date:'Y-m-d' }}" class="form-control">
-                            </div>
-                        </div>
-                        <div class="col-md-12">
-                            <div class="mb-3">
-                                <label>Profile Image</label>
-                                <input type="file" name="image" class="form-control" accept="image/*">
+                                <label>Notes</label>
+                                {{ form.notes }}
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
-                </div>
-            </form>
+                    
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary">Save Project</button>
+                        <a href="{% url 'customers:project_list' %}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
 
-<style>
-.skill-tag {
-    display: inline-block;
-    background-color: #e9ecef;
-    color: #495057;
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    margin: 0 5px 5px 0;
-}
-.profile-img img {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    object-fit: cover;
-}
-.team-members {
-    display: inline-flex;
-    list-style: none;
-    padding-left: 0;
-    margin-bottom: 0;
-}
-.team-members li {
-    margin-right: 5px;
-}
-.team-members li img {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    object-fit: cover;
-}
-.all-users {
-    display: inline-block;
-    background: #e9ecef;
-    border-radius: 50%;
-    width: 32px;
-    height: 32px;
-    line-height: 32px;
-    text-align: center;
-    font-size: 12px;
-    font-weight: 600;
-    text-decoration: none;
-    color: #495057;
-}
-.badge {
-    padding: 0.35em 0.65em;
-    font-size: 0.75em;
-    font-weight: 600;
-}
-.progress-xs {
-    height: 5px;
-}
-.table td {
-    vertical-align: middle;
-}
-.material-icons {
-    font-size: 20px;
-}
-</style>
-
 <script>
-// Initialize tooltips
-var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-    return new bootstrap.Tooltip(tooltipTriggerEl)
-})
+function calculateRemaining() {
+    let total = parseFloat(document.querySelector('[name="total_price"]').value) || 0;
+    let paid = parseFloat(document.querySelector('[name="paid_amount"]').value) || 0;
+    let remaining = total - paid;
+    document.getElementById('remaining_amount').value = '$' + remaining.toFixed(2);
+}
+document.querySelector('[name="total_price"]').addEventListener('input', calculateRemaining);
+document.querySelector('[name="paid_amount"]').addEventListener('input', calculateRemaining);
+calculateRemaining();
 </script>
-
 {% endblock %}
