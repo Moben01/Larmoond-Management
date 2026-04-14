@@ -3,7 +3,7 @@
     <td>{{ forloop.counter }}</td>
     <td>{{ domain.domain_name }}</td>
     <td>{{ domain.client|default:"-" }}</td>
-    <td>${{ domain.price }}</td>
+    <td>{{ domain.price }}</td>
     <td>
         {% if domain.status == 'active' %}
             <span class="badge bg-success">Active</span>
@@ -16,11 +16,64 @@
     <td>{{ domain.registrar|default:"-" }}</td>
     <td>{{ domain.dns_provider|default:"-" }}</td>
     <td>{{ domain.notes|default:"-"|truncatechars:30 }}</td>
-    <td>
-        <a href="{% url 'hosting:domain_update' domain.id %}" class="btn btn-sm btn-warning">Edit</a>
-        <a href="{% url 'hosting:domain_delete' domain.id %}" class="btn btn-sm btn-danger">Delete</a>
+
+    <td class="text-center action-cell">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+        <div class="btn-group dropup">
+            <a href="#" class="btn btn-sm btn-white border-0" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-three-dots-vertical"></i>
+            </a>
+
+            <ul class="dropdown-menu dropdown-menu-end shadow">
+                <li>
+                    <a class="dropdown-item d-flex align-items-center" href="{% url 'hosting:domain_update' domain.id %}">
+                        <i class="bi bi-pencil-square me-2 text-warning"></i>
+                        Edit
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item d-flex align-items-center"
+                       href="#"
+                       data-bs-toggle="modal"
+                       data-bs-target="#deleteModal{{ domain.id }}">
+                        <i class="bi bi-trash me-2 text-danger"></i>
+                        Delete
+                    </a>
+                </li>
+            </ul>
+        </div>
     </td>
 </tr>
+
+<div class="modal fade" id="deleteModal{{ domain.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                Are you sure you want to delete this domain?
+                <br>
+                <strong>{{ domain.domain_name }}</strong>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Cancel
+                </button>
+
+                <a href="{% url 'hosting:domain_delete' domain.id %}" class="btn btn-danger">
+                    Yes, Delete
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>
 {% empty %}
 <tr>
     <td colspan="11" class="text-center">No domains found.</td>
