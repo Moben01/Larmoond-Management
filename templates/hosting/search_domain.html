@@ -3,7 +3,7 @@
     <td>{{ forloop.counter }}</td>
     <td>{{ domain.domain_name }}</td>
     <td>{{ domain.client|default:"-" }}</td>
-    <td>{{ domain.price }}</td>
+    <td>${{ domain.price }}</td>
     <td>
         {% if domain.status == 'active' %}
             <span class="badge bg-success">Active</span>
